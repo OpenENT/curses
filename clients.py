@@ -1,7 +1,7 @@
 import requests
 import json
 
-class PDClient:
+class PlayerD:
 
     def __init__(self, host):
         self.host = host
@@ -24,3 +24,19 @@ class PDClient:
     def get_status(self):
         t = requests.get(self.host+"/status").text
         return json.loads(t)
+
+class Backend:
+
+    def __init__(self, host):
+        self.host = host
+        self.providers = json.loads(requests.get(self.host+"/info").text)['providers']
+
+    def search(self, provider, query):
+        return json.loads(requests.get(self.host+"/search", params={'provider': provider, 'query': query}).text)['result']
+
+    def search_all(self, query, providers=None):
+        if providers is None:
+            providers = self.providers
+        results = list()
+        for provider in providers:
+            results.extend(json.loads(requests.get(self.host+"/search", params={'provider': provider, 'query': query}).text)['result'])
