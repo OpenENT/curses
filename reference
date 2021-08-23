@@ -1,0 +1,7 @@
+right 261
+left = 260
+up = 259
+down = 258
+return = 10
+delete = 127
+delall = 263
