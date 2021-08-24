@@ -40,8 +40,7 @@ def handle_input(stdscr):
         if intent is not None:
             intents.append(intent)
     else:
-        intents[-1].input(char)  # TODO: handle intent change
-
+        ret, intent = intents[-1].input(char)
 
 def render(stdscr):
 

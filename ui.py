@@ -8,8 +8,8 @@ class Intent:
     def render(self, stdscr, x, y, w, h):
         pass
 
-    def input(self, char): # maybe {exit: bool, intent: intent}
-        return False
+    def input(self, char): # {exit: bool, intent: intent}
+        return False, None
 
 
 class TitleBarIntent(Intent):
