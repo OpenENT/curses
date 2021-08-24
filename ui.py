@@ -45,9 +45,10 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
 
 class ConsoleIntent(Intent):
 
-    def __init__(self, color_pair=1):
+    def __init__(self, engine, color_pair=1):
         super().__init__()
         self.color_pair = color_pair
+        self.engine = engine
         self.text = str()
 
     def render(self, stdscr, x, y, w, h):
@@ -60,15 +61,17 @@ class ConsoleIntent(Intent):
     def input(self, char):
         if char == 127: # delete
             if len(self.text) == 0:
-                return False
+                return False, None
             self.text = self.text[:-1]
         elif char == 263: # Ctrl+delete
             self.text = ""
         elif char == 10: # Return
-            pass  # TODO
+            self.engine.execute(self.text)
+            self.text = ""
+            return True, None
         else: # Normal key
             self.text += chr(char)
-
+        return False, None
 
 class MainIntent(Intent):
 
