@@ -67,7 +67,7 @@ class ConsoleIntent(Intent):
         elif char == 10: # Return
             pass  # TODO
         else: # Normal key
-            text += chr(char)
+            self.text += chr(char)
 
 
 class MainIntent(Intent):
