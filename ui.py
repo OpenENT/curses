@@ -56,9 +56,9 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
                     self.player.pause()
 
         elif char == 337: # shift + up
-            pass # Volume up
+            self.player.set_volume(self.status['volume'] + 10)
         elif char == 336: # shift + down
-            pass # Volume down
+            self.player.set_volume(self.status['volume'] - 10)
         elif char == 4: # ctrl+d
             self.player.close()
 
