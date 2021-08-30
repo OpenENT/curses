@@ -40,3 +40,4 @@ class Backend:
         results = list()
         for provider in providers:
             results.extend(json.loads(requests.get(self.host+"/search", params={'provider': provider, 'query': query}).text)['result'])
+        return results
