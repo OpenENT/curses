@@ -32,14 +32,18 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
         super().__init__()
         self.player = player
         self.color_pair = color_pair
+        self.time = time.time()
+        self.status = self.player.get_status()
         
     def render(self, stdscr, x, y, w, h):
-        status = self.player.get_status()
+        if time.time() - self.time > 1:
+            self.status = self.player.get_status()
+            self.time = time.time()
         stdscr.addstr(y, x, " "*(w-1), curses.color_pair(self.color_pair)) # Clear line
-        if status['playing']:
-            current = time.strftime('%M:%S', time.gmtime(int(status['position'])))
-            duration = time.strftime('%M:%S', time.gmtime(int(status['duration'])))
-            stdscr.addstr(y, x, f"{current} / {duration} - {status['name']}", curses.color_pair(self.color_pair))
+        if self.status['playing']:
+            current = time.strftime('%M:%S', time.gmtime(int(self.status['position'])))
+            duration = time.strftime('%M:%S', time.gmtime(int(self.status['duration'])))
+            stdscr.addstr(y, x, f"{current} / {duration} - {self.status['name']}", curses.color_pair(self.color_pair))
         else:
             stdscr.addstr(y, x, "Not playing", curses.color_pair(self.color_pair))
 
