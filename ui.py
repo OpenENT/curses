@@ -1,4 +1,5 @@
 import curses
+import time
 
 class Intent:
 
@@ -36,8 +37,8 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
         status = self.player.get_status()
         stdscr.addstr(y, x, " "*(w-1), curses.color_pair(self.color_pair)) # Clear line
         if status['playing']:
-            current = int(status['position'])
-            duration = status['duration']
+            current = time.strftime('%M:%S', time.gmtime(int(status['position'])))
+            duration = time.strftime('%M:%S', time.gmtime(int(status['duration'])))
             stdscr.addstr(y, x, f"{current} / {duration} - {status['name']}", curses.color_pair(self.color_pair))
         else:
             stdscr.addstr(y, x, "Not playing", curses.color_pair(self.color_pair))
