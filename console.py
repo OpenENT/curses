@@ -17,6 +17,8 @@ class Console():
                 self.player.resume()
             elif command == 'go':
                 self.player.go_at(seconds=int(split[1]))
+            elif command == 'volume':
+                self.player.set_volume(volume=int(split[1]))
         else:
             res = self.backend.search_all(query=text)
             return SearchIntent(self.player, res)            
