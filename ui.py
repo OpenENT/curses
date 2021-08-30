@@ -78,11 +78,11 @@ class ConsoleIntent(Intent):
         stdscr.addstr(y, x, ">" + render_text, curses.color_pair(self.color_pair))
     
     def input(self, char):
-        if char == 127: # delete
+        if char == 263: # delete
             if len(self.text) == 0:
                 return False, None
             self.text = self.text[:-1]
-        elif char == 263: # Ctrl+delete
+        elif char == 8: # Ctrl+delete
             self.text = ""
         elif char == 10: # Return
             intent = self.engine.execute(self.text)
