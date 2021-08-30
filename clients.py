@@ -18,6 +18,9 @@ class PlayerD:
     def close(self):
         return requests.get(self.host+"/action", params={'type': 'close'}).text
 
+    def set_volume(self, volume: int):
+        return requests.get(self.host+"/action", params={'type': 'volume', 'arg': volume}).text
+
     def go_at(self, seconds: int):
         return requests.get(self.host+"/action", params={'type': 'go_at', 'arg': seconds}).text
     
