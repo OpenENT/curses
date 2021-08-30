@@ -42,6 +42,7 @@ def handle_input(stdscr):
             refresh = True
             intents.append(intent)
     else:
+        playingstatus.input(char)
         ret, intent = intents[-1].input(char)
 
 def render(stdscr):

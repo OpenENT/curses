@@ -46,7 +46,21 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
             stdscr.addstr(y, x, f"{current} / {duration} - {self.status['name']}", curses.color_pair(self.color_pair))
         else:
             stdscr.addstr(y, x, "Not playing", curses.color_pair(self.color_pair))
+    
+    def input(self, char):
+        if char == 32:
+            if self.status['playing']:
+                if self.status['paused']:
+                    self.player.resume()
+                else:
+                    self.player.pause()
 
+        elif char == 337: # shift + up
+            pass # Volume up
+        elif char == 336: # shift + down
+            pass # Volume down
+        elif char == 4: # ctrl+d
+            self.player.close()
 
 class ConsoleIntent(Intent):
 
