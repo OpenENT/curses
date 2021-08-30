@@ -66,9 +66,9 @@ class ConsoleIntent(Intent):
         elif char == 263: # Ctrl+delete
             self.text = ""
         elif char == 10: # Return
-            self.engine.execute(self.text)
+            intent = self.engine.execute(self.text)
             self.text = ""
-            return True, None
+            return True, intent
         else: # Normal key
             self.text += chr(char)
         return False, None
@@ -84,16 +84,33 @@ class MainIntent(Intent):
 
 class SearchIntent(Intent):
 
-    def __init__(self, results):
+    def __init__(self, player, results):
         super().__init__()
+        self.player = player
         self.results = results
         self.index = 0
+        self.shittyworkaround = None
+        
 
     def render(self, stdscr, x, y, w, h):
         ry = 0
         for res in self.results:
-            ry += 1
-            stdscr.addstr(y+ry, x, "a")
+            if res['type'] == "song":
+                if self.index == ry:
+                    self.shittyworkaround = res
+                    stdscr.addstr(y+ry, x, f'{res["title"]}', curses.color_pair(1))
+                else:
+                    stdscr.addstr(y+ry, x, f'{res["title"]}')
+                ry += 1
+            if ry == h:
+                break
 
     def input(self, char):
-        pass
+        if char == 259:
+            self.index -= 1
+        elif char == 258:
+            self.index += 1
+        elif char == 10:
+            self.player.play(url=self.shittyworkaround['stream_url'])
+            
+        return False, None

@@ -11,4 +11,4 @@ class Console():
             pass  # bang
         else:
             res = self.backend.search_all(query=text)
-            return SearchIntent(res)            
+            return SearchIntent(self.player, res)            
