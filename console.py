@@ -15,6 +15,8 @@ class Console():
                 self.player.pause()
             elif command == 'resume':
                 self.player.resume()
+            elif command == 'go':
+                self.player.go_at(seconds=int(split[1]))
         else:
             res = self.backend.search_all(query=text)
             return SearchIntent(self.player, res)            
