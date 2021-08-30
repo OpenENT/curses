@@ -20,13 +20,14 @@ index = 0
 
 old_w = 0
 old_h = 0
+refresh = False
 
 def execute():
     pass
 
 def handle_input(stdscr):
 
-    global console_override    
+    global console_override, refresh
     char = stdscr.getch()
 
     if char == -1:
@@ -38,19 +39,21 @@ def handle_input(stdscr):
         if ret:
             console_override = False
         if intent is not None:
+            refresh = True
             intents.append(intent)
     else:
         ret, intent = intents[-1].input(char)
 
 def render(stdscr):
 
-    global old_h, old_w
+    global old_h, old_w, refresh
     h, w = stdscr.getmaxyx()
 
-    if old_h != h or old_w != w:
+    if old_h != h or old_w != w or refresh:
         stdscr.clear()
         old_h = h
         old_w = w
+        refresh = False
     
     titlebar.render(stdscr, 0, 0, w, 1)
     playingstatus.render(stdscr, 0, h-1, w, 1)

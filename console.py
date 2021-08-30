@@ -1,3 +1,4 @@
+from ui import SearchIntent
 
 class Console():
 
@@ -9,4 +10,5 @@ class Console():
         if text.startswith("!"):
             pass  # bang
         else:
-            pass # normal search
+            res = self.backend.search_all(query=text)
+            return SearchIntent(res)            
