@@ -6,7 +6,6 @@ from curses import wrapper
 import curses
 import time
 
-
 c = PlayerD("http://127.0.0.1:5000")
 b = Backend("http://127.0.0.1:5001")
 
@@ -16,14 +15,10 @@ console = ConsoleIntent(Console(c, b))
 
 console_override = False
 intents = [MainIntent()]
-index = 0
 
 old_w = 0
 old_h = 0
 refresh = False
-
-def execute():
-    pass
 
 def handle_input(stdscr):
 
