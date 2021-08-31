@@ -44,3 +44,6 @@ class Backend:
         for provider in providers:
             results.extend(json.loads(requests.get(self.host+"/search", params={'provider': provider, 'query': query}).text)['result'])
         return results
+
+    def download(self, song):
+        return json.loads(requests.get(self.host+"/download", params={'provider': song['provider'], 'stream_url': song['stream_url']}).text)
