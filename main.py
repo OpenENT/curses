@@ -3,15 +3,18 @@ from clients import PlayerD, Backend
 from console import Console
 from curses import wrapper
 
+import settings
 import curses
 import time
+
+s = settings.Settings('settings.json')
 
 c = PlayerD("http://127.0.0.1:5000")
 b = Backend("http://127.0.0.1:5001")
 
 playingstatus = PlayingStatusIntent(c)
 titlebar = TitleBarIntent()
-console = ConsoleIntent(Console(c, b))
+console = ConsoleIntent(Console(c, b, s))
 
 console_override = False
 intents = [MainIntent()]
@@ -19,6 +22,10 @@ intents = [MainIntent()]
 old_w = 0
 old_h = 0
 refresh = False
+
+for provider in b.providers:
+    if provider not in s.providers:
+        s.providers[provider] = settings.ProviderSettings(provider)
 
 def handle_input(stdscr):
 

@@ -12,7 +12,6 @@ class Intent:
     def input(self, char): # {exit: bool, intent: intent}
         return False, None
 
-
 class TitleBarIntent(Intent):
 
     def __init__(self, title="OpenPlayer", color_pair=1):
@@ -24,7 +23,6 @@ class TitleBarIntent(Intent):
         strlen = len(self.title)
         padding = " " * int((w - strlen) / 2)
         stdscr.addstr(y, x, f"{padding}{self.title}{padding}", curses.color_pair(self.color_pair))
-
 
 class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
 
@@ -100,13 +98,14 @@ class MainIntent(Intent):
     def render(self, stdscr, x, y, w, h):
         stdscr.addstr(y, x, "Working")
 
-
 class SearchIntent(Intent):
 
-    def __init__(self, player, results):
+    def __init__(self, backend, player, results, settings):
         super().__init__()
         self.player = player
+        self.backend = backend
         self.results = results
+        self.settings = settings
         self.index = 0
         self.shittyworkaround = None
         
@@ -130,6 +129,14 @@ class SearchIntent(Intent):
         elif char == 258:
             self.index += 1
         elif char == 10:
-            self.player.play(url=self.shittyworkaround['stream_url'])
+            if self.settings.providers[self.shittyworkaround['provider']]['prefer_download']:
+                res = self.backend.download(self.shittyworkaround)
+                if 'stream_url' in res:
+                    self.player.play(url=res['stream_url'])
+                else:
+                    self.player.play(url=self.shittyworkaround['stream_url'])
+            else:
+                self.player.play(url=self.shittyworkaround['stream_url'])
             
         return False, None
+
