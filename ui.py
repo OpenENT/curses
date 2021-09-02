@@ -26,16 +26,16 @@ class TitleBarIntent(Intent):
 
 class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
 
-    def __init__(self, player, color_pair=1):
+    def __init__(self, instance, color_pair=1):
         super().__init__()
-        self.player = player
+        self.instance = instance
         self.color_pair = color_pair
         self.time = time.time()
-        self.status = self.player.get_status()
+        self.status = self.instance.player.get_status()
         
     def render(self, stdscr, x, y, w, h):
         if time.time() - self.time > 1:
-            self.status = self.player.get_status()
+            self.status = self.instance.player.get_status()
             self.time = time.time()
         stdscr.addstr(y, x, " "*(w-1), curses.color_pair(self.color_pair)) # Clear line
         if self.status['playing']:
@@ -49,16 +49,16 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
         if char == 32:
             if self.status['playing']:
                 if self.status['paused']:
-                    self.player.resume()
+                    self.instance.player.resume()
                 else:
-                    self.player.pause()
+                    self.instance.player.pause()
 
         elif char == 337: # shift + up
-            self.player.set_volume(self.status['volume'] + 10)
+            self.instance.player.set_volume(self.status['volume'] + 10)
         elif char == 336: # shift + down
-            self.player.set_volume(self.status['volume'] - 10)
+            self.instance.player.set_volume(self.status['volume'] - 10)
         elif char == 4: # ctrl+d
-            self.player.close()
+            self.instance.player.close()
 
 class ConsoleIntent(Intent):
 
@@ -100,12 +100,10 @@ class MainIntent(Intent):
 
 class SearchIntent(Intent):
 
-    def __init__(self, backend, player, results, settings):
+    def __init__(self, instance, results):
         super().__init__()
-        self.player = player
-        self.backend = backend
+        self.instance = instance
         self.results = results
-        self.settings = settings
         self.index = 0
         self.shittyworkaround = None
         
@@ -129,14 +127,14 @@ class SearchIntent(Intent):
         elif char == 258:
             self.index += 1
         elif char == 10:
-            if self.settings.providers[self.shittyworkaround['provider']]['prefer_download']:
-                res = self.backend.download(self.shittyworkaround)
+            if self.instance.settings.providers[self.shittyworkaround['provider']]['prefer_download']:
+                res = self.instance.backend.download(self.shittyworkaround)
                 if 'stream_url' in res:
-                    self.player.play(url=res['stream_url'])
+                    self.instance.player.play(url=res['stream_url'])
                 else:
-                    self.player.play(url=self.shittyworkaround['stream_url'])
+                    self.instance.player.play(url=self.shittyworkaround['stream_url'])
             else:
-                self.player.play(url=self.shittyworkaround['stream_url'])
+                self.instance.player.play(url=self.shittyworkaround['stream_url'])
             
         return False, None
 

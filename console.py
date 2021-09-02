@@ -2,10 +2,8 @@ from ui import SearchIntent
 
 class Console():
 
-    def __init__(self, player, backend, settings):
-        self.player = player
-        self.backend = backend
-        self.settings = settings
+    def __init__(self, instance):
+        self.instance = instance
 
     def execute(self, text):
         if text.startswith("!"):
@@ -13,19 +11,19 @@ class Console():
             command = split[0]
             args = text[len(command):]
             if command == 'pause':
-                self.player.pause()
+                self.instance.player.pause()
             elif command == 'resume':
-                self.player.resume()
+                self.instance.player.resume()
             elif command == 'go':
                 if len(split) > 1:
-                    self.player.go_at(seconds=int(split[1]))
+                    self.instance.player.go_at(seconds=int(split[1]))
             elif command == 'volume':
                 if len(split) > 1:
-                    self.player.set_volume(volume=int(split[1]))
+                    self.instance.player.set_volume(volume=int(split[1]))
             elif command == 'prefer_download':
                 if len(split) > 3:
-                    if split[1] in self.settings.providers:
-                        self.settings.providers[split[1]]['prefer_download'] = bool(split[2])
+                    if split[1] in self.instance.settings.providers:
+                        self.instance.settings.providers[split[1]]['prefer_download'] = bool(split[2])
         else:
-            res = self.backend.search_all(query=text)
-            return SearchIntent(self.backend, self.player, res, self.settings)            
+            res = self.instance.backend.search_all(query=text)
+            return SearchIntent(self.instance, res)            

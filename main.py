@@ -7,14 +7,18 @@ import settings
 import curses
 import time
 
-s = settings.Settings('settings.json')
+class Instance:
+    
+    def __init__(self, backend, player, settings):
+        self.backend = backend
+        self.player = player
+        self.settings = settings
 
-c = PlayerD("http://127.0.0.1:5000")
-b = Backend("http://127.0.0.1:5001")
+instance = Instance(Backend("http://127.0.0.1:5001"), PlayerD("http://127.0.0.1:5000"), settings.Settings('settings.json'))
 
-playingstatus = PlayingStatusIntent(c)
+playingstatus = PlayingStatusIntent(instance)
 titlebar = TitleBarIntent()
-console = ConsoleIntent(Console(c, b, s))
+console = ConsoleIntent(Console(instance))
 
 console_override = False
 intents = [MainIntent()]
@@ -23,9 +27,9 @@ old_w = 0
 old_h = 0
 refresh = False
 
-for provider in b.providers:
-    if provider not in s.providers:
-        s.providers[provider] = settings.ProviderSettings(provider)
+for provider in instance.backend.providers:
+    if provider not in instance.settings.providers:
+        instance.settings.providers[provider] = settings.ProviderSettings(provider)
 
 def handle_input(stdscr):
 
