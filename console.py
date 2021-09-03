@@ -1,4 +1,5 @@
 from ui import SearchIntent
+from clients import PlayerD, Backend
 
 class Console():
 
@@ -24,6 +25,12 @@ class Console():
                 if len(split) > 3:
                     if split[1] in self.instance.settings.providers:
                         self.instance.settings.providers[split[1]]['prefer_download'] = bool(split[2])
+            elif command == 'set_playerd':
+                if len(split) > 1:
+                    self.instance.player = PlayerD(split[1])
+            elif command == 'set_backend':
+                if len(split) > 1:
+                    self.instance.set_backend(Backend(split[1]))
         else:
             res = self.instance.backend.search_all(query=text)
             return SearchIntent(self.instance, res)            
