@@ -10,9 +10,20 @@ import time
 class Instance:
     
     def __init__(self, backend, player, settings):
-        self.backend = backend
         self.player = player
         self.settings = settings
+        self.set_backend(backend)
+
+    def set_backend(self, backend):
+        self.backend = backend
+        try:
+            backend.connect()
+        except Exception:
+            return False
+        for provider in self.backend.providers:
+            if provider not in self.settings.providers:
+                self.settings.providers[provider] = settings.ProviderSettings(provider)
+        return True
 
 instance = Instance(Backend("http://127.0.0.1:5001"), PlayerD("http://127.0.0.1:5000"), settings.Settings('settings.json'))
 
@@ -27,9 +38,7 @@ old_w = 0
 old_h = 0
 refresh = False
 
-for provider in instance.backend.providers:
-    if provider not in instance.settings.providers:
-        instance.settings.providers[provider] = settings.ProviderSettings(provider)
+
 
 def handle_input(stdscr):
 
