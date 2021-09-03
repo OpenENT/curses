@@ -31,14 +31,22 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
         self.instance = instance
         self.color_pair = color_pair
         self.time = time.time()
-        self.status = self.instance.player.get_status()
-        
+        try:
+            self.status = self.instance.player.get_status()
+        except:
+            self.status = None
+
     def render(self, stdscr, x, y, w, h):
         if time.time() - self.time > 1:
-            self.status = self.instance.player.get_status()
             self.time = time.time()
+            try:
+                self.status = self.instance.player.get_status()
+            except:
+                self.status = None
         stdscr.addstr(y, x, " "*(w-1), curses.color_pair(self.color_pair)) # Clear line
-        if self.status['playing']:
+        if self.status is None:
+            stdscr.addstr(y, x, "Can't connect to PlayerD", curses.color_pair(self.color_pair))
+        elif self.status['playing']:
             current = time.strftime('%M:%S', time.gmtime(int(self.status['position'])))
             duration = time.strftime('%M:%S', time.gmtime(int(self.status['duration'])))
             stdscr.addstr(y, x, f"{current} / {duration} - {self.status['name']}", curses.color_pair(self.color_pair))
