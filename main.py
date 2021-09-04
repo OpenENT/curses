@@ -23,6 +23,7 @@ class Instance:
         for provider in self.backend.providers:
             if provider not in self.settings.providers:
                 self.settings.providers[provider] = settings.ProviderSettings(provider)
+        self.settings.save()
         return True
 
 instance = Instance(Backend("http://127.0.0.1:5001"), PlayerD("http://127.0.0.1:5000"), settings.Settings('settings.json'))
