@@ -43,7 +43,10 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
                 self.status = self.instance.player.get_status()
             except:
                 self.status = None
-        stdscr.addstr(y, x, " "*(w-1), curses.color_pair(self.color_pair)) # Clear line
+        try: # bruh
+            stdscr.addstr(y, x, " "*(w), curses.color_pair(self.color_pair)) # Clear line
+        except:
+            pass
         if self.status is None:
             stdscr.addstr(y, x, "Can't connect to PlayerD", curses.color_pair(self.color_pair))
         elif self.status['playing']:
