@@ -12,6 +12,7 @@ class Settings:
         self.refresh_rate = 60
         self.background = 255 # White
         self.foreground = 0 # Black
+        self.titlebar = True
         self.playerd = 'http://127.0.0.1:5000'
         self.backend = 'http://127.0.0.1:5001'
         try:

@@ -69,12 +69,14 @@ class Player:
             self.old_h = h
             self.old_w = w
             self.refresh = False
-    
-        self.titlebar.render(stdscr, 0, 0, w, 1)
+        offset_y = 0
+        if self.settings.titlebar:
+            self.titlebar.render(stdscr, 0, 0, w, 1)
+            offset_y += 1
         self.playingstatus.render(stdscr, 0, h-1, w, 1)
         if self.console_override:
             self.console.render(stdscr, 0, h-1, w, 1)
-        self.intents[-1].render(stdscr, 0, 1, w, h-2)
+        self.intents[-1].render(stdscr, 0, offset_y, w, h-2)
         self.handle_input(stdscr)
         stdscr.refresh()
 
