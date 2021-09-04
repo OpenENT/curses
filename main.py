@@ -7,12 +7,22 @@ import settings
 import curses
 import time
 
-class Instance:
+class Player:
     
-    def __init__(self, backend, player, settings):
-        self.player = player
-        self.settings = settings
-        self.set_backend(backend)
+    def __init__(self):
+        self.settings = settings.Settings('settings.json')
+        self.player = PlayerD(self.settings.playerd)
+        self.set_backend(Backend(self.settings.backend))
+
+        self.playingstatus = PlayingStatusIntent(self)
+        self.titlebar = TitleBarIntent()
+        self.console = ConsoleIntent(Console(self))
+        self.console_override = False
+        self.intents = [MainIntent()] # Questionable, rly needed?
+
+        self.old_w = 0
+        self.old_h = 0
+        self.refresh = False
 
     def set_backend(self, backend):
         self.backend = backend
@@ -26,68 +36,52 @@ class Instance:
         self.settings.save()
         return True
 
-instance = Instance(Backend("http://127.0.0.1:5001"), PlayerD("http://127.0.0.1:5000"), settings.Settings('settings.json'))
+    def handle_input(self, stdscr):
 
-playingstatus = PlayingStatusIntent(instance)
-titlebar = TitleBarIntent()
-console = ConsoleIntent(Console(instance))
+        char = stdscr.getch()
 
-console_override = False
-intents = [MainIntent()]
+        if char == -1:
+            return
+        elif char == 62:
+            self.console_override = not self.console_override
+        elif self.console_override:
+            ret, intent = self.console.input(char)
+            if ret:
+                self.console_override = False
+            if intent is not None:
+                self.refresh = True
+                self.intents.append(intent)
+        else:
+            self.playingstatus.input(char)
+            ret, intent = self.intents[-1].input(char)
+            # ???
 
-old_w = 0
-old_h = 0
-refresh = False
+    def render(self, stdscr):
 
+        h, w = stdscr.getmaxyx()
 
-
-def handle_input(stdscr):
-
-    global console_override, refresh
-    char = stdscr.getch()
-
-    if char == -1:
-        return
-    elif char == 62:
-        console_override = not console_override
-    elif console_override:
-        ret, intent = console.input(char)
-        if ret:
-            console_override = False
-        if intent is not None:
-            refresh = True
-            intents.append(intent)
-    else:
-        playingstatus.input(char)
-        ret, intent = intents[-1].input(char)
-
-def render(stdscr):
-
-    global old_h, old_w, refresh
-    h, w = stdscr.getmaxyx()
-
-    if old_h != h or old_w != w or refresh:
-        stdscr.clear()
-        old_h = h
-        old_w = w
-        refresh = False
+        if self.old_h != h or self.old_w != w or self.refresh:
+            stdscr.clear()
+            self.old_h = h
+            self.old_w = w
+            self.refresh = False
     
-    titlebar.render(stdscr, 0, 0, w, 1)
-    playingstatus.render(stdscr, 0, h-1, w, 1)
-    if console_override:
-        console.render(stdscr, 0, h-1, w, 1)
-    intents[-1].render(stdscr, 0, 1, w, h-2)
-    handle_input(stdscr)
-    stdscr.refresh()
+        self.titlebar.render(stdscr, 0, 0, w, 1)
+        self.playingstatus.render(stdscr, 0, h-1, w, 1)
+        if self.console_override:
+            self.console.render(stdscr, 0, h-1, w, 1)
+        self.intents[-1].render(stdscr, 0, 1, w, h-2)
+        self.handle_input(stdscr)
+        stdscr.refresh()
 
-    return True
+        return True
 
-def main(stdscr):
-    stdscr.clear()
-    stdscr.nodelay(1)
-    curses.curs_set(0)
-    curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
-    while render(stdscr):
-        time.sleep(1000 / 60 / 1000)
+    def loop(self, stdscr):
+        stdscr.clear()
+        stdscr.nodelay(1)
+        curses.curs_set(0)
+        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        while self.render(stdscr):
+            time.sleep(1000 / 60 / 1000)
 
-wrapper(main)
+wrapper(Player().loop)
