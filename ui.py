@@ -162,3 +162,60 @@ class SearchIntent(Intent):
             
         return False, None
 
+class EditorIntent(Intent):
+
+    def __init__(self, instance):
+        super().__init__()
+        self.instance = instance
+        self.dict = instance.settings.__dict__
+        self.index = 0
+        self.editing = False
+        self.editing_field = ''
+
+    def render(self, stdscr, x, y, w, h):
+        i = 0
+        for k, v in self.dict.items():
+            if self.index == i:
+                if self.editing:
+                    stdscr.addstr(y+i, x, f'{k}: {self.editing_field}', curses.color_pair(1))
+                else:
+                    self.item = (k, v)
+                    stdscr.addstr(y+i, x, f'{k}: {v}', curses.color_pair(1))
+            else:
+                stdscr.addstr(y+i, x, f'{k}: {v}')
+            i += 1
+    
+    def input(self, char):
+        if self.editing:
+            self.instance.refresh = True # Ugly hack
+            if char == 10:
+                self.editing = False
+                self.dict[self.item[0]] = self.editing_field
+                self.instance.settings.save()
+            else:
+                t = type(self.editing_field)
+                if t is bool:
+                    self.editing_field = not self.editing_field
+                if t is int:
+                    if char == 259:
+                        self.editing_field += 1
+                    elif char == 258:
+                        self.editing_field -= 1
+                if t is str:
+                    if char == 263: # delete
+                        self.editing_field = self.editing_field[:-1]
+                    elif char == 8: # Ctrl+delete
+                        self.editing_field = ""
+                    else: # Normal key
+                        self.editing_field += chr(char)
+            return False, None
+        if char == 259:
+            if self.index > 0:
+                self.index -= 1
+        elif char == 258:
+            if self.index < len(self.dict) - 1:
+                self.index += 1
+        elif char == 10:
+            self.editing = True
+            self.editing_field = self.item[1]
+        return False, None

@@ -1,4 +1,4 @@
-from ui import SearchIntent
+from ui import SearchIntent, EditorIntent
 from clients import PlayerD, Backend
 
 class Console():
@@ -45,6 +45,8 @@ class Console():
                     self.instance.set_backend(Backend(split[1]))
                 else:
                     return 'Usage: !set_backend {ADDRESS}'
+            elif command == 'editor':
+                return EditorIntent(self.instance)
             elif command in self.instance.backend.providers:
                 res = self.instance.backend.search(provider=command, query=args)
                 return SearchIntent(self.instance, res)
