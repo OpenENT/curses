@@ -18,19 +18,33 @@ class Console():
             elif command == 'go':
                 if len(split) > 1:
                     self.instance.player.go_at(seconds=int(split[1]))
+                else:
+                    return 'Usage: !go {seconds}'
             elif command == 'volume':
                 if len(split) > 1:
                     self.instance.player.set_volume(volume=int(split[1]))
+                else:
+                    return 'Usage: !volume {0-150}'
             elif command == 'prefer_download':
+                found = False
                 if len(split) > 3:
                     if split[1] in self.instance.settings.providers:
                         self.instance.settings.providers[split[1]]['prefer_download'] = bool(split[2])
+                        found = True
+                    if not found:
+                        return f'Backend not found. Backends: {self.instance.backend.providers}'
+                else:
+                    return 'Usage: !prefer_download {BACKEND} {True/False}'
             elif command == 'set_playerd':
                 if len(split) > 1:
                     self.instance.player = PlayerD(split[1])
+                else:
+                    return 'Usage: !set_playerd {ADDRESS}'
             elif command == 'set_backend':
                 if len(split) > 1:
                     self.instance.set_backend(Backend(split[1]))
+                else:
+                    return 'Usage: !set_backend {ADDRESS}'
             elif command in self.instance.backend.providers:
                 res = self.instance.backend.search(provider=command, query=args)
                 return SearchIntent(self.instance, res)
