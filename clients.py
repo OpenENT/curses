@@ -32,6 +32,7 @@ class Backend:
 
     def __init__(self, host):
         self.host = host
+        self.providers = list()
         
     def connect(self):
         self.providers = json.loads(requests.get(self.host+"/info").text)['providers']
