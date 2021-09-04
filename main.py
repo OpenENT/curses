@@ -50,7 +50,11 @@ class Player:
                 self.console_override = False
             if intent is not None:
                 self.refresh = True
-                self.intents.append(intent)
+                if type(intent) is str:
+                    self.playingstatus.status_text = intent
+                    self.playingstatus.override = True
+                else:
+                    self.intents.append(intent)
         else:
             self.playingstatus.input(char)
             ret, intent = self.intents[-1].input(char)

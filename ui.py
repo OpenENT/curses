@@ -31,22 +31,35 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
         self.instance = instance
         self.color_pair = color_pair
         self.time = time.time()
+        self.override = False
+        self.status_text = ''
         try:
             self.status = self.instance.player.get_status()
         except:
             self.status = None
 
     def render(self, stdscr, x, y, w, h):
+
+        try: # bruh
+            stdscr.addstr(y, x, " "*(w), curses.color_pair(self.color_pair)) # Clear line
+        except:
+            pass
+        
+        if self.override:
+            
+            stdscr.addstr(y, x, self.status_text, curses.color_pair(self.color_pair))
+            if time.time() - self.time > 2:
+                self.time = time.time()
+                self.override = False
+            return
+        
         if time.time() - self.time > 1:
             self.time = time.time()
             try:
                 self.status = self.instance.player.get_status()
             except:
                 self.status = None
-        try: # bruh
-            stdscr.addstr(y, x, " "*(w), curses.color_pair(self.color_pair)) # Clear line
-        except:
-            pass
+
         if self.status is None:
             stdscr.addstr(y, x, "Can't connect to PlayerD", curses.color_pair(self.color_pair))
         elif self.status['playing']:
