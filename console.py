@@ -27,7 +27,7 @@ class Console():
                     return 'Usage: !volume {0-150}'
             elif command == 'prefer_download':
                 found = False
-                if len(split) > 3:
+                if len(split) > 2:
                     if split[1] in self.instance.settings.providers:
                         self.instance.settings.providers[split[1]]['prefer_download'] = bool(split[2])
                         found = True
