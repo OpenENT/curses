@@ -55,7 +55,7 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
     
     def input(self, char):
         if char == 32:
-            if self.status['playing']:
+            if self.status is not None and self.status['playing']:
                 if self.status['paused']:
                     self.instance.player.resume()
                 else:
