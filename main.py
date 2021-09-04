@@ -84,7 +84,7 @@ class Player:
         stdscr.clear()
         stdscr.nodelay(1)
         curses.curs_set(0)
-        curses.init_pair(1, self.settings.background, self.settings.foreground)
+        curses.init_pair(1, self.settings.foreground, self.settings.background)
         while self.render(stdscr):
             time.sleep(1000 / self.settings.refresh_rate / 1000)
 
