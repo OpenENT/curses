@@ -10,7 +10,7 @@ class Console():
         if text.startswith("!"):
             split = text[1:].split(" ")
             command = split[0]
-            args = text[len(command):]
+            args = text[len(command)+1:]
             if command == 'pause':
                 self.instance.player.pause()
             elif command == 'resume':
@@ -31,6 +31,9 @@ class Console():
             elif command == 'set_backend':
                 if len(split) > 1:
                     self.instance.set_backend(Backend(split[1]))
+            elif command in self.instance.backend.providers:
+                res = self.instance.backend.search(provider=command, query=args)
+                return SearchIntent(self.instance, res)
         else:
             res = self.instance.backend.search_all(query=text)
             return SearchIntent(self.instance, res)            
