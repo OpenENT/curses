@@ -8,6 +8,8 @@ class Settings:
     def __init__(self, path):
         self.path = path
         self.providers = dict()
+        self.history = list()
+        self.refresh_rate = 60
         self.playerd = 'http://127.0.0.1:5000'
         self.backend = 'http://127.0.0.1:5001'
         try:

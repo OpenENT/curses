@@ -86,6 +86,6 @@ class Player:
         curses.curs_set(0)
         curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
         while self.render(stdscr):
-            time.sleep(1000 / 60 / 1000)
+            time.sleep(1000 / self.settings.refresh_rate / 1000)
 
 wrapper(Player().loop)
