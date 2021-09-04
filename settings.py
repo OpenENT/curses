@@ -13,6 +13,7 @@ class Settings:
         self.background = 255 # White
         self.foreground = 0 # Black
         self.titlebar = True
+        self.titlebar_title = 'OpenPlayer'
         self.playerd = 'http://127.0.0.1:5000'
         self.backend = 'http://127.0.0.1:5001'
         try:

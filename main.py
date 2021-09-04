@@ -15,7 +15,7 @@ class Player:
         self.set_backend(Backend(self.settings.backend))
 
         self.playingstatus = PlayingStatusIntent(self)
-        self.titlebar = TitleBarIntent()
+        self.titlebar = TitleBarIntent(self.settings.titlebar_title)
         self.console = ConsoleIntent(Console(self))
         self.console_override = False
         self.intents = [MainIntent()] # Questionable, rly needed?

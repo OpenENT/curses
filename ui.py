@@ -14,7 +14,7 @@ class Intent:
 
 class TitleBarIntent(Intent):
 
-    def __init__(self, title="OpenPlayer", color_pair=1):
+    def __init__(self, title, color_pair=1):
         super().__init__()
         self.title = title
         self.color_pair = color_pair
@@ -46,7 +46,7 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
             pass
         
         if self.override:
-            
+
             stdscr.addstr(y, x, self.status_text, curses.color_pair(self.color_pair))
             if time.time() - self.time > 2:
                 self.time = time.time()
