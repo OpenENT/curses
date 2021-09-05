@@ -8,6 +8,7 @@ class Settings:
     def __init__(self, path):
         self.path = path
         self.providers = dict()
+        self.global_search = []
         self.history = list()
         self.collect_history = True
         self.refresh_rate = 60
