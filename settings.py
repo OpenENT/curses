@@ -9,6 +9,7 @@ class Settings:
         self.path = path
         self.providers = dict()
         self.history = list()
+        self.collect_history = True
         self.refresh_rate = 60
         self.background = 255 # White
         self.foreground = 0 # Black

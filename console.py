@@ -54,5 +54,8 @@ class Console():
                 res = self.instance.backend.search(provider=command, query=args)
                 return SearchIntent(self.instance, res)
         else:
+            if self.instance.settings.collect_history:
+                self.instance.settings.history.append(text)
+                self.instance.settings.save()
             res = self.instance.backend.search_all(query=text)
             return SearchIntent(self.instance, res)            
