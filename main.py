@@ -13,16 +13,18 @@ class Player:
         self.settings = settings.Settings('settings.json')
         self.player = PlayerD(self.settings.playerd)
         self.set_backend(Backend(self.settings.backend))
+        self.init_gui()
 
+    def init_gui(self):
         self.playingstatus = PlayingStatusIntent(self)
         self.titlebar = TitleBarIntent(self.settings.titlebar_title)
         self.console = ConsoleIntent(Console(self))
         self.console_override = False
-        self.intents = [MainIntent()] # Questionable, rly needed?
-
+        self.intents = [MainIntent()]
         self.old_w = 0
         self.old_h = 0
         self.refresh = False
+        self.reload = False
 
     def set_backend(self, backend):
         self.backend = backend
@@ -89,7 +91,7 @@ class Player:
         self.handle_input(stdscr)
         stdscr.refresh()
 
-        return True
+        return not self.reload
 
     def loop(self, stdscr):
         stdscr.clear()
@@ -98,5 +100,7 @@ class Player:
         curses.init_pair(1, self.settings.foreground, self.settings.background)
         while self.render(stdscr):
             time.sleep(1000 / self.settings.refresh_rate / 1000)
+        self.init_gui()
+        self.loop(stdscr)
 
 wrapper(Player().loop)

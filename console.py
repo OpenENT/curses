@@ -47,6 +47,9 @@ class Console():
                     return 'Usage: !set_backend {ADDRESS}'
             elif command == 'editor':
                 return EditorIntent(self.instance)
+            elif command == 'reload':
+                self.instance.reload = True
+                return "Reloading"
             elif command in self.instance.backend.providers:
                 res = self.instance.backend.search(provider=command, query=args)
                 return SearchIntent(self.instance, res)
