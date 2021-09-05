@@ -164,36 +164,49 @@ class SearchIntent(Intent):
 
 class EditorIntent(Intent):
 
-    def __init__(self, instance, dict=None):
+    def __init__(self, instance, object=None):
         super().__init__()
         self.instance = instance
-        if dict is None:
-            self.dict = instance.settings.__dict__
+        if object is None:
+            self.object = instance.settings.__dict__
         else:
-            self.dict = dict
+            self.object = object
         self.index = 0
         self.editing = False
         self.editing_field = ''
 
     def render(self, stdscr, x, y, w, h):
         i = 0
-        for k, v in self.dict.items():
-            if self.index == i:
-                if self.editing:
-                    stdscr.addstr(y+i, x, f'{k}: {self.editing_field}', curses.color_pair(1))
+        if type(self.object) is dict:
+            for k, v in self.object.items():
+                if self.index == i:
+                    if self.editing:
+                        stdscr.addstr(y+i, x, f'{k}: {self.editing_field}', curses.color_pair(1))
+                    else:
+                        self.item = (k, v)
+                        stdscr.addstr(y+i, x, f'{k}: {v}', curses.color_pair(1))
                 else:
-                    self.item = (k, v)
-                    stdscr.addstr(y+i, x, f'{k}: {v}', curses.color_pair(1))
-            else:
-                stdscr.addstr(y+i, x, f'{k}: {v}')
-            i += 1
+                    stdscr.addstr(y+i, x, f'{k}: {v}')
+                i += 1
+        elif type(self.object) is list:
+            for k in self.object:
+                if self.index == i:
+                    if self.editing:
+                        stdscr.addstr(y+i, x, f'{self.editing_field}', curses.color_pair(1))
+                    else:
+                        self.item = k
+                        stdscr.addstr(y+i, x, f'{k}', curses.color_pair(1))
+                else:
+                    stdscr.addstr(y+i, x, f'{k}')
+                i += 1
     
     def input(self, char):
+        key = self.item[0] if type(self.object) is dict else self.index
+        self.instance.refresh = True # Ugly hack
         if self.editing:
-            self.instance.refresh = True # Ugly hack
             if char == 10:
                 self.editing = False
-                self.dict[self.item[0]] = self.editing_field
+                self.object[key] = self.editing_field
                 self.instance.settings.save()
             else:
                 t = type(self.editing_field)
@@ -216,13 +229,14 @@ class EditorIntent(Intent):
             if self.index > 0:
                 self.index -= 1
         elif char == 258:
-            if self.index < len(self.dict) - 1:
+            if self.index < len(self.object) - 1:
                 self.index += 1
         elif char == 10:
-            if type(self.item[1]) is dict:
-                return False, EditorIntent(self.instance, self.item[1])
+            item = self.item[1] if type(self.object) is dict else self.object[self.index]
+            if type(item) is dict or type(item) is list:
+                return False, EditorIntent(self.instance, item)                
             self.editing = True
-            self.editing_field = self.item[1]
+            self.editing_field = item
         elif char == 27:
             return True, None
         return False, None
