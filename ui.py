@@ -164,10 +164,13 @@ class SearchIntent(Intent):
 
 class EditorIntent(Intent):
 
-    def __init__(self, instance):
+    def __init__(self, instance, dict=None):
         super().__init__()
         self.instance = instance
-        self.dict = instance.settings.__dict__
+        if dict is None:
+            self.dict = instance.settings.__dict__
+        else:
+            self.dict = dict
         self.index = 0
         self.editing = False
         self.editing_field = ''
@@ -216,6 +219,10 @@ class EditorIntent(Intent):
             if self.index < len(self.dict) - 1:
                 self.index += 1
         elif char == 10:
+            if type(self.item[1]) is dict:
+                return False, EditorIntent(self.instance, self.item[1])
             self.editing = True
             self.editing_field = self.item[1]
+        elif char == 27:
+            return True, None
         return False, None

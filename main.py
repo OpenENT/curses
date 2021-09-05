@@ -58,7 +58,16 @@ class Player:
         else:
             self.playingstatus.input(char)
             ret, intent = self.intents[-1].input(char)
-            # ???
+            if ret:
+                self.refresh = True
+                self.intents.pop(-1)
+            if intent is not None:
+                self.refresh = True
+                if type(intent) is str:
+                    self.playingstatus.status_text = intent
+                    self.playingstatus.override = True
+                else:
+                    self.intents.append(intent)
 
     def render(self, stdscr):
 
