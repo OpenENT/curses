@@ -53,6 +53,8 @@ class Console():
             elif command in self.instance.backend.providers:
                 res = self.instance.backend.search(provider=command, query=args)
                 return SearchIntent(self.instance, res)
+            else:
+                return "Command not found"
         else:
             if self.instance.settings.collect_history:
                 self.instance.settings.history.append(text)
