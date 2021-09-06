@@ -62,3 +62,23 @@ class Backend:
 
     def download(self, song):
         return json.loads(requests.get(self.host+"/download", params={'provider': song['provider'], 'stream_url': song['stream_url']}).text)
+
+def discovery(subnet): # Bad shit ngl
+    sip = subnet.split('.')
+    if len(sip) != 4:
+        raise Exception("Invalid subnet")
+    base = f'http://{sip[0]}.{sip[1]}.{sip[2]}.'
+    for i in range(255):
+        print(f'{base}{i}')
+        try:
+            r = requests.get(f'{base}{i}:5000').text
+            if 'PlayerD' in r:
+                print(f'Found PlayerD on host {base}{i}')
+        except:
+            continue
+        try:
+            r = requests.get(f'{base}{i}:5001').text
+            if 'Backend' in r:
+                print(f'Found Backend on host {base}{i}')
+        except:
+            continue
