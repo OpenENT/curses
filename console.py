@@ -1,4 +1,4 @@
-from ui import SearchIntent, EditorIntent
+from ui import SearchIntent, PlaylistIntent, EditorIntent
 from clients import PlayerD, Backend
 import playlist
 
@@ -54,7 +54,7 @@ class Console():
             elif command == 'playlist':
                 if len(split) < 3:
                     return 'Usage: !playlist {play/add/remove} {NAME}'
-                name = text[len(command) + len(split[1]) + 2:]
+                name = text[len(command) + len(split[1]) + 3:]
                 if split[1] == 'add':
                     self.instance.playlist.playlists.append(playlist.playlist(name))
                 plist = None
@@ -65,6 +65,8 @@ class Console():
                     self.instance.playlist.playlists.remove(plist) # TODO: del file
                 elif split[1] == 'play':
                     self.instance.player.play_playlist(plist)
+                elif split[1] == 'show':
+                    return PlaylistIntent(self.instance, plist)
                 self.instance.playlist.save()
             elif command in self.instance.backend.providers:
                 res = self.instance.backend.search(provider=command, query=args)
