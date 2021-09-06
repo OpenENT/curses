@@ -1,4 +1,4 @@
-from ui import PlayingStatusIntent, TitleBarIntent, ConsoleIntent, MainIntent
+from ui import PlayingStatusIntent, TitleBarIntent, ConsoleIntent, MainIntent, PlaylistSubmenu
 from playlist import PlaylistManager
 from clients import PlayerD, Backend
 from console import Console
@@ -23,6 +23,9 @@ class Player:
         self.titlebar = TitleBarIntent(self.settings.titlebar_title)
         self.console = ConsoleIntent(Console(self))
         self.console_override = False
+        self.menu = None
+        self.menu_override = False
+        self.override_global_keys = False
         self.intents = [MainIntent()]
         self.old_w = 0
         self.old_h = 0
@@ -62,8 +65,19 @@ class Player:
                     self.playingstatus.override = True
                 else:
                     self.intents.append(intent)
+        elif self.menu_override:
+            ret, intent = self.menu.input(char)
+            if ret:
+                self.menu_override = False
+                self.refresh = True
+            if intent is not None:
+                self.refresh = True
+                if type(intent) is str:
+                    self.playingstatus.status_text = intent
+                    self.playingstatus.override = True
+                else:
+                    self.intents.append(intent)
         else:
-            self.playingstatus.input(char)
             ret, intent = self.intents[-1].input(char)
             if ret:
                 self.refresh = True
@@ -75,6 +89,12 @@ class Player:
                     self.playingstatus.override = True
                 else:
                     self.intents.append(intent)
+            elif not ret and not self.override_global_keys:
+                self.playingstatus.input(char)
+                if char == 112:
+                    self.menu_override = True
+                    self.menu = PlaylistSubmenu(self, True)
+                
 
     def render(self, stdscr):
 
@@ -92,6 +112,8 @@ class Player:
         self.playingstatus.render(stdscr, 0, h-1, w, 1)
         if self.console_override:
             self.console.render(stdscr, 0, h-1, w, 1)
+        if self.menu_override:
+            self.menu.render(stdscr, int(w/3), int(h/2), int(w/3), 1)
         self.intents[-1].render(stdscr, 0, offset_y, w, h-2)
         self.handle_input(stdscr)
         stdscr.refresh()
