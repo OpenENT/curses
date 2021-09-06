@@ -54,8 +54,17 @@ class Console():
             elif command == 'playlist':
                 if len(split) < 3:
                     return 'Usage: !playlist {play/add/remove} {NAME}'
+                name = text[len(command) + len(split[1]) + 2:]
                 if split[1] == 'add':
-                    self.instance.playlist.playlists.append(playlist.playlist(split[2]))
+                    self.instance.playlist.playlists.append(playlist.playlist(name))
+                plist = None
+                for pl in self.instance.playlist.playlists:
+                    if name in pl['name']:
+                        plist = pl
+                if split[1] == 'remove':
+                    self.instance.playlist.playlists.remove(plist) # TODO: del file
+                elif split[1] == 'play':
+                    self.instance.player.play_playlist(plist)
                 self.instance.playlist.save()
             elif command in self.instance.backend.providers:
                 res = self.instance.backend.search(provider=command, query=args)

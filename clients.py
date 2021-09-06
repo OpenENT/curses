@@ -36,6 +36,12 @@ class PlayerD:
     def playlist_go(self, index: int):
         return requests.get(self.host+"/action", params={'type': 'playlist_go', 'arg': index}).text
     
+    def play_playlist(self, playlist):
+        self.playlist_clear()
+        for song in playlist['songs']:
+            self.playlist_append(song['stream_url'])
+        self.playlist_go(0)
+
     def get_status(self):
         t = requests.get(self.host+"/status").text
         return json.loads(t)
