@@ -148,6 +148,8 @@ class Submenu(Intent):
                 self.index += 1
         elif char == 10:
             return [*self.choices][self.index]
+        elif char == 27:
+            return 'exit'
         return None
 
 class PlaylistSubmenu(Submenu):
@@ -243,6 +245,8 @@ class PlaylistIntent(Intent):
         super().__init__()
         self.instance = instance
         self.playlist = playlist
+        self.on_submenu = False
+        self.submenu = None
         self.index = 0
 
     def render(self, stdscr, x, y, w, h):
@@ -250,14 +254,29 @@ class PlaylistIntent(Intent):
         for song in self.playlist['songs']:
             stdscr.addstr(y+i, x, f'{song["title"]}', curses.color_pair(1 if i == self.index else 0))
             i += 1
+        if self.on_submenu:
+            self.submenu.render(stdscr, x+w-16, y+self.index, 16, 4)
 
     def input(self, char):
+        if self.on_submenu:
+            ret = self.submenu.input(char)
+            if ret is not None:
+                if ret == 'delete':
+                    self.playlist['songs'].pop(self.index)
+                    self.index -= 1
+                self.submenu = None
+                self.on_submenu = False 
+                self.instance.refresh = True
+            return False, None
         if char == 259:
             if self.index > 0:
                 self.index -= 1
         elif char == 258:
             if self.index < len(self.playlist['songs']) - 1:
                 self.index += 1
+        elif char == 109:
+            self.submenu = Submenu({'delete': 'Delete'})
+            self.on_submenu = True
         elif char == 10:
             return False, None
         return False, None
