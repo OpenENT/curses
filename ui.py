@@ -122,6 +122,57 @@ class MainIntent(Intent):
     def render(self, stdscr, x, y, w, h):
         stdscr.addstr(y, x, "Working")
 
+class Submenu(Intent):
+
+    def __init__(self, choices):
+        super().__init__()
+        self.choices = choices
+        self.index = 0
+    
+    def render(self, stdscr, x, y, w, h):
+        i = 0
+        for k, v in self.choices.items():
+            padding = " " * int((w - len(v)) / 2)
+            formatted = f'{padding}{v}{padding}'
+            if len(formatted) >= w:
+                formatted = formatted[:w-1]
+            stdscr.addstr(y+i, x, formatted, curses.color_pair(2 if i == self.index else 1))
+            i += 1
+
+    def input(self, char):
+        if char == 259:
+            if self.index > 0:
+                self.index -= 1
+        elif char == 258:
+            if self.index < len(self.choices) - 1:
+                self.index += 1
+        elif char == 10:
+            return [*self.choices][self.index]
+        return None
+
+class PlaylistSubmenu(Submenu):
+
+    def __init__(self, instance):
+        self.instance = instance
+        self.choices = dict()
+        self.index = 0
+        index = 0
+        for playlist in self.instance.playlist.playlists:
+            self.choices[index] = playlist['name']
+            index += 1
+        self.choices['new'] = 'New playlist'
+
+    def input(self, char):
+        ret = super().input(char)
+        if ret is not None:
+            if ret == 'new':
+                self.instance.console_override = True
+                self.instance.console.text = '!playlist add '
+                return None
+            else:
+                return self.instance.playlist.playlists[ret]
+        return ret
+
 class SearchIntent(Intent):
 
     def __init__(self, instance, results):
@@ -130,7 +181,8 @@ class SearchIntent(Intent):
         self.results = results
         self.index = 0
         self.shittyworkaround = None
-        
+        self.on_submenu = False
+        self.submenu = None
 
     def render(self, stdscr, x, y, w, h):
         ry = 0
@@ -144,8 +196,28 @@ class SearchIntent(Intent):
                 ry += 1
             if ry == h:
                 break
+        if self.on_submenu:
+            self.submenu.render(stdscr, x+w-16, y+self.index, 16, 4)
 
     def input(self, char):
+
+        if self.on_submenu:
+            ret = self.submenu.input(char)
+            if ret is not None:
+                if ret == 'playlist':
+                    self.submenu = PlaylistSubmenu(self.instance)
+                    self.instance.refresh = True
+                    return False, None
+                elif ret == 'queue':
+                    pass
+                elif type(ret) is dict:
+                    ret['songs'].append(self.shittyworkaround)
+                    self.instance.playlist.save()
+                self.submenu = None
+                self.on_submenu = False 
+                self.instance.refresh = True
+            return False, None
+
         if char == 259:
             self.index -= 1
         elif char == 258:
@@ -159,8 +231,18 @@ class SearchIntent(Intent):
                     self.instance.player.play(url=self.shittyworkaround['stream_url'])
             else:
                 self.instance.player.play(url=self.shittyworkaround['stream_url'])
-            
+        elif char == 109:
+            self.submenu = Submenu({'playlist': 'Add to playlist', 'queue': 'Add to queue'})
+            self.on_submenu = True
+        
         return False, None
+
+class PlaylistIntent(Intent):
+
+    def __init__(self, instance, playlist):
+        super().__init__()
+        self.instance = instance
+        self.playlist = playlist
 
 class EditorIntent(Intent):
 

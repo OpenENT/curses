@@ -1,4 +1,5 @@
 from ui import PlayingStatusIntent, TitleBarIntent, ConsoleIntent, MainIntent
+from playlist import PlaylistManager
 from clients import PlayerD, Backend
 from console import Console
 from curses import wrapper
@@ -11,6 +12,7 @@ class Player:
     
     def __init__(self):
         self.settings = settings.Settings('settings.json')
+        self.playlist = PlaylistManager('playlists')
         self.player = PlayerD(self.settings.playerd)
         self.set_backend(Backend(self.settings.backend))
         self.init_gui()
@@ -100,6 +102,7 @@ class Player:
         stdscr.nodelay(1)
         curses.curs_set(0)
         curses.init_pair(1, self.settings.foreground, self.settings.background)
+        curses.init_pair(2, self.settings.foreground_alt, self.settings.background_alt)
         while self.render(stdscr):
             time.sleep(1000 / self.settings.refresh_rate / 1000)
         self.init_gui()

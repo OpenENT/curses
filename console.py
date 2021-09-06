@@ -1,5 +1,6 @@
 from ui import SearchIntent, EditorIntent
 from clients import PlayerD, Backend
+import playlist
 
 class Console():
 
@@ -24,7 +25,7 @@ class Console():
                 if len(split) > 1:
                     self.instance.player.set_volume(volume=int(split[1]))
                 else:
-                    return 'Usage: !volume {0-150}'
+                    return 'Usage: !voset_backend {ADDRESS}lume {0-150}'
             elif command == 'prefer_download':
                 found = False
                 if len(split) > 2:
@@ -50,6 +51,12 @@ class Console():
             elif command == 'reload':
                 self.instance.reload = True
                 return "Reloading"
+            elif command == 'playlist':
+                if len(split) < 3:
+                    return 'Usage: !playlist {play/add/remove} {NAME}'
+                if split[1] == 'add':
+                    self.instance.playlist.playlists.append(playlist.playlist(split[2]))
+                self.instance.playlist.save()
             elif command in self.instance.backend.providers:
                 res = self.instance.backend.search(provider=command, query=args)
                 return SearchIntent(self.instance, res)

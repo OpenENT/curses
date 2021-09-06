@@ -12,19 +12,22 @@ class PlaylistManager:
             with open(file) as f:
                 data = json.load(f)
                 if 'type' in data and data['type'] == 'playlist':
-                    if f'{path}/liked.json' in file:
+                    if f'{path}/Liked songs.json' in file:
                         likedplaylistfound = True
-                    data['filename'] = file
-                    self.playlists.append(data)
+                        self.playlists.insert(0, data)
+                    else:    
+                        self.playlists.append(data)
 
         if not likedplaylistfound:
-            self.playlists.append(playlist('Liked songs', [], filename = f'{path}/liked.json'))
+            self.playlists.append(playlist('Liked songs'))
             self.save()
 
     def save(self):
         for playlist in self.playlists:
-            with open(playlist['filename'], 'w') as f:
+            with open(f'{self.path}/{playlist["name"]}.json', 'w') as f:
                 json.dump(playlist, f, indent=4)
 
-def playlist(name: str, songs: list, filename=None):
-    return {'type': 'playlist', 'filename': filename, 'name': name, 'songs': songs}
+def playlist(name: str, songs=None):
+    if songs is None:
+        songs = list()
+    return {'type': 'playlist', 'name': name, 'songs': songs}
