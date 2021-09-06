@@ -154,7 +154,8 @@ class Submenu(Intent):
 
 class PlaylistSubmenu(Submenu):
 
-    def __init__(self, instance):
+    def __init__(self, instance, global_mode=False):
+        self.global_mode = global_mode
         self.instance = instance
         self.choices = dict()
         self.index = 0
@@ -166,13 +167,24 @@ class PlaylistSubmenu(Submenu):
 
     def input(self, char):
         ret = super().input(char)
+        
         if ret is not None:
+            if ret == 'exit':
+                return True, None if self.global_mode else None
             if ret == 'new':
                 self.instance.console_override = True
                 self.instance.console.text = '!playlist add '
-                return None
+                return True, None if self.global_mode else None
             else:
-                return self.instance.playlist.playlists[ret]
+                if self.global_mode:
+                    self.instance.player.play_playlist(self.instance.playlist.playlists[ret])
+                    return True, None
+                else:
+                    return self.instance.playlist.playlists[ret]
+        elif self.global_mode:
+            if char == 118:
+                return True, PlaylistIntent(self.instance, self.instance.playlist.playlists[[*self.choices][self.index]])
+            return False, None
         return ret
 
 class SearchIntent(Intent):
@@ -279,6 +291,8 @@ class PlaylistIntent(Intent):
             self.on_submenu = True
         elif char == 10:
             return False, None
+        elif char == 27:
+            return True, None
         return False, None
 
 class EditorIntent(Intent):
@@ -286,6 +300,7 @@ class EditorIntent(Intent):
     def __init__(self, instance, object=None):
         super().__init__()
         self.instance = instance
+        self.instance.override_global_keys = True
         if object is None:
             self.object = instance.settings.__dict__
         else:
@@ -357,5 +372,6 @@ class EditorIntent(Intent):
             self.editing = True
             self.editing_field = item
         elif char == 27:
+            self.instance.override_global_keys = False
             return True, None
         return False, None
