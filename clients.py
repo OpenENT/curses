@@ -24,6 +24,18 @@ class PlayerD:
     def go_at(self, seconds: int):
         return requests.get(self.host+"/action", params={'type': 'go_at', 'arg': seconds}).text
     
+    def playlist_append(self, url: str):
+        return requests.get(self.host+"/action", params={'type': 'playlist_append', 'arg': url}).text
+
+    def playlist_remove(self, index: int):
+        return requests.get(self.host+"/action", params={'type': 'playlist_remove', 'arg': index}).text
+    
+    def playlist_clear(self):
+        return requests.get(self.host+"/action", params={'type': 'playlist_clear'}).text
+    
+    def playlist_go(self, index: int):
+        return requests.get(self.host+"/action", params={'type': 'playlist_go', 'arg': index}).text
+    
     def get_status(self):
         t = requests.get(self.host+"/status").text
         return json.loads(t)
