@@ -37,6 +37,7 @@ class PlayerD:
         return requests.get(self.host+"/action", params={'type': 'playlist_go', 'arg': index}).text
     
     def play_playlist(self, playlist):
+        self.close()
         self.playlist_clear()
         for song in playlist['songs']:
             self.playlist_append(song['stream_url'])
