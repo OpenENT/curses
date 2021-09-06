@@ -7,6 +7,7 @@ from curses import wrapper
 import settings
 import curses
 import time
+import os
 
 class Player:
     
@@ -108,4 +109,5 @@ class Player:
         self.init_gui()
         self.loop(stdscr)
 
+os.environ.setdefault('ESCDELAY', '0') # Fixes terrible ESC delay in menus
 wrapper(Player().loop)
