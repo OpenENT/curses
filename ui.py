@@ -243,6 +243,24 @@ class PlaylistIntent(Intent):
         super().__init__()
         self.instance = instance
         self.playlist = playlist
+        self.index = 0
+
+    def render(self, stdscr, x, y, w, h):
+        i = 0
+        for song in self.playlist['songs']:
+            stdscr.addstr(y+i, x, f'{song["title"]}', curses.color_pair(1 if i == self.index else 0))
+            i += 1
+
+    def input(self, char):
+        if char == 259:
+            if self.index > 0:
+                self.index -= 1
+        elif char == 258:
+            if self.index < len(self.playlist['songs']) - 1:
+                self.index += 1
+        elif char == 10:
+            return False, None
+        return False, None
 
 class EditorIntent(Intent):
 
