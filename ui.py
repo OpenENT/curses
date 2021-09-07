@@ -279,6 +279,8 @@ class PlaylistIntent(Intent):
         if self.on_submenu:
             ret = self.submenu.input(char)
             if ret is not None:
+                if ret == 'debug':
+                    return False, EditorIntent(self.instance, self.playlist['songs'][self.index])
                 if ret == 'delete':
                     self.playlist['songs'].pop(self.index)
                     self.index -= 1
@@ -294,6 +296,8 @@ class PlaylistIntent(Intent):
                 self.index += 1
         elif char == 109:
             self.submenu = Submenu({'delete': 'Delete'})
+            if self.instance.settings.debug_mode:
+                self.submenu.choices['debug'] = 'Edit JSON'
             self.on_submenu = True
         elif char == 10:
             return False, None

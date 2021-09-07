@@ -18,6 +18,7 @@ class Settings:
         self.foreground_alt = 10
         self.titlebar = True
         self.titlebar_title = 'OpenPlayer'
+        self.debug_mode = False
         self.playerd = 'http://127.0.0.1:5000'
         self.backend = 'http://127.0.0.1:5001'
         try:
