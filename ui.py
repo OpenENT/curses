@@ -1,4 +1,5 @@
 import curses
+import glob
 import time
 
 class Intent:
@@ -378,5 +379,29 @@ class EditorIntent(Intent):
             self.editing_field = item
         elif char == 27:
             self.instance.override_global_keys = False
+            return True, None
+        return False, None
+
+class DocsIntent(Intent):
+    
+    def __init__(self, path: str):
+        super().__init__()
+        self.pages = list()
+        for file in glob.glob(f"{path}/*.txt"):
+            with open(file) as f:
+                self.pages.append(f.read())
+        self.index = 0
+    
+    def render(self, stdscr, x, y, w, h):
+        stdscr.addstr(y, x, self.pages[self.index])
+
+    def input(self, char):
+        if char == 259:
+            if self.index > 0:
+                self.index -= 1
+        elif char == 258:
+            if self.index < len(self.choices) - 1:
+                self.index += 1
+        elif char == 27:
             return True, None
         return False, None
