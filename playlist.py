@@ -8,7 +8,6 @@ class PlaylistManager:
         self.playlists = list()
         likedplaylistfound = False
         for file in glob.glob(f"{path}/*.json"):
-            print(file)
             with open(file) as f:
                 data = json.load(f)
                 if 'type' in data and data['type'] == 'playlist':
