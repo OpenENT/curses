@@ -31,3 +31,9 @@ def playlist(name: str, songs=None):
     if songs is None:
         songs = list()
     return {'type': 'playlist', 'name': name, 'songs': songs}
+
+def playlist_to_list(playlist: dict):
+    l = list()
+    for song in playlist['songs']:
+        l.append(song['title'])
+    return l
