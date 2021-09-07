@@ -14,7 +14,7 @@ class Player:
     def __init__(self):
         self.settings = settings.Settings('settings.json')
         self.playlist = PlaylistManager('playlists')
-        self.player = PlayerD(self.settings.playerd)
+        self.player = PlayerD(self, self.settings.playerd)
         self.set_backend(Backend(self.settings.backend))
         self.init_gui()
 
