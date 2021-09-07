@@ -110,6 +110,9 @@ class ConsoleIntent(Intent):
             intent = self.engine.execute(self.text)
             self.text = ""
             return True, intent
+        elif char == 27:
+            self.text = ''
+            return True, None
         else: # Normal key
             self.text += chr(char)
         return False, None
@@ -248,6 +251,8 @@ class SearchIntent(Intent):
         elif char == 109:
             self.submenu = Submenu({'playlist': 'Add to playlist', 'queue': 'Add to queue'})
             self.on_submenu = True
+        elif char == 27:
+            return True, None
         
         return False, None
 
