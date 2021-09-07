@@ -112,11 +112,11 @@ class Player:
             self.titlebar.render(stdscr, 0, 0, w, 1)
             offset_y += 1
         self.playingstatus.render(stdscr, 0, h-1, w, 1)
+        self.intents[-1].render(stdscr, 0, offset_y, w, h-2)
         if self.console_override:
             self.console.render(stdscr, 0, h-1, w, 1)
         if self.menu_override:
             self.menu.render(stdscr, int(w/3), int(h/2), int(w/3), 1)
-        self.intents[-1].render(stdscr, 0, offset_y, w, h-2)
         self.handle_input(stdscr)
         stdscr.refresh()
 
