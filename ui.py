@@ -1,3 +1,4 @@
+from playlist import playlist_to_list
 import curses
 import glob
 import time
@@ -191,34 +192,58 @@ class PlaylistSubmenu(Submenu):
             return False, None
         return ret
 
-class SearchIntent(Intent):
+class ListIntent(Intent):
 
-    def __init__(self, instance, results):
+    def __init__(self, items):
         super().__init__()
-        self.instance = instance
-        self.results = results
+        self.items = items
         self.index = 0
-        self.shittyworkaround = None
-        self.on_submenu = False
-        self.submenu = None
 
     def render(self, stdscr, x, y, w, h):
-        ry = 0
+        i = 0
+        offset = max(0, self.index - h + 1)
+        for k in range(offset, len(self.items)):
+            item = self.items[k]
+            stdscr.addstr(y+i, x, " "*(w)) # Clear line
+            stdscr.addstr(y+i, x, item[:w], curses.color_pair(1 if i + offset == self.index else 0))
+            i += 1
+            if i == y+h-1:
+                break
+
+    def input(self, char):
+        if char == 259:
+            if self.index > 0:
+                self.index -= 1
+        elif char == 258:
+            if self.index < len(self.items) - 1:
+                self.index += 1
+        elif char == 10:
+            return self.index
+        elif char == 27:
+            return 'exit'
+        return None
+
+class SearchIntent(ListIntent):
+
+    def __init__(self, instance, results):
+        self.instance = instance
+        self.results = results
+        self.on_submenu = False
+        self.submenu = None
+        self.filtered = list()
+        self.items = list()
+        self.index = 0
         for res in self.results:
             if res['type'] == "song":
-                if self.index == ry:
-                    self.shittyworkaround = res
-                    stdscr.addstr(y+ry, x, f'{res["title"]}', curses.color_pair(1))
-                else:
-                    stdscr.addstr(y+ry, x, f'{res["title"]}')
-                ry += 1
-            if ry == h:
-                break
+                self.filtered.append(res)
+                self.items.append(res['title'])
+
+    def render(self, stdscr, x, y, w, h):
+        super().render(stdscr, x, y, w, h)
         if self.on_submenu:
             self.submenu.render(stdscr, x+w-16, y+self.index, 16, 4)
 
     def input(self, char):
-
         if self.on_submenu:
             ret = self.submenu.input(char)
             if ret is not None:
@@ -229,26 +254,15 @@ class SearchIntent(Intent):
                 elif ret == 'queue':
                     pass
                 elif type(ret) is dict:
-                    ret['songs'].append(self.shittyworkaround)
+                    ret['songs'].append(self.filtered[self.index])
                     self.instance.playlist.save()
                 self.submenu = None
                 self.on_submenu = False 
                 self.instance.refresh = True
             return False, None
-
-        if char == 259:
-            self.index -= 1
-        elif char == 258:
-            self.index += 1
-        elif char == 10:
-            if self.instance.settings.providers[self.shittyworkaround['provider']]['prefer_download']:
-                res = self.instance.backend.download(self.shittyworkaround)
-                if 'stream_url' in res:
-                    self.instance.player.play(url=res['stream_url'])
-                else:
-                    self.instance.player.play(url=self.shittyworkaround['stream_url'])
-            else:
-                self.instance.player.play(url=self.shittyworkaround['stream_url'])
+        ret = super().input(char)
+        if char == 10:
+            self.instance.player.play(url=self.instance.player.check_download(self.filtered[self.index]))
         elif char == 109:
             self.submenu = Submenu({'playlist': 'Add to playlist', 'queue': 'Add to queue'})
             self.on_submenu = True
@@ -257,21 +271,17 @@ class SearchIntent(Intent):
         
         return False, None
 
-class PlaylistIntent(Intent):
+class PlaylistIntent(ListIntent):
 
     def __init__(self, instance, playlist):
-        super().__init__()
         self.instance = instance
         self.playlist = playlist
         self.on_submenu = False
         self.submenu = None
-        self.index = 0
+        super().__init__(playlist_to_list(playlist))
 
     def render(self, stdscr, x, y, w, h):
-        i = 0
-        for song in self.playlist['songs']:
-            stdscr.addstr(y+i, x, f'{song["title"]}', curses.color_pair(1 if i == self.index else 0))
-            i += 1
+        super().render(stdscr, x, y, w, h)
         if self.on_submenu:
             self.submenu.render(stdscr, x+w-16, y+self.index, 16, 4)
 
@@ -283,26 +293,24 @@ class PlaylistIntent(Intent):
                     return False, EditorIntent(self.instance, self.playlist['songs'][self.index])
                 if ret == 'delete':
                     self.playlist['songs'].pop(self.index)
+                    self.items = playlist_to_list(self.playlist)
                     self.index -= 1
+                    self.instance.playlist.save()
                 self.submenu = None
                 self.on_submenu = False 
                 self.instance.refresh = True
             return False, None
-        if char == 259:
-            if self.index > 0:
-                self.index -= 1
-        elif char == 258:
-            if self.index < len(self.playlist['songs']) - 1:
-                self.index += 1
+        ret = super().input(char)
+        if ret is not None:
+            if ret == 'exit':
+                return True, None
+            playlist = self.playlist['songs'][ret]
+            return True, None
         elif char == 109:
             self.submenu = Submenu({'delete': 'Delete'})
             if self.instance.settings.debug_mode:
                 self.submenu.choices['debug'] = 'Edit JSON'
             self.on_submenu = True
-        elif char == 10:
-            return False, None
-        elif char == 27:
-            return True, None
         return False, None
 
 class EditorIntent(Intent):
@@ -404,7 +412,7 @@ class DocsIntent(Intent):
             if self.index > 0:
                 self.index -= 1
         elif char == 258:
-            if self.index < len(self.choices) - 1:
+            if self.index < len(self.pages) - 1:
                 self.index += 1
         elif char == 27:
             return True, None
