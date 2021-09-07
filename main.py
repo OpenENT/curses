@@ -1,4 +1,4 @@
-from ui import PlayingStatusIntent, TitleBarIntent, ConsoleIntent, MainIntent, PlaylistSubmenu
+from ui import PlayingStatusIntent, PlaylistSubmenu, TitleBarIntent, ConsoleIntent, DocsIntent, MainIntent
 from playlist import PlaylistManager
 from clients import PlayerD, Backend
 from console import Console
@@ -94,7 +94,9 @@ class Player:
                 if char == 112:
                     self.menu_override = True
                     self.menu = PlaylistSubmenu(self, True)
-                
+                elif char == 104:
+                    self.intents.append(DocsIntent('docs'))
+                    self.refresh = True
 
     def render(self, stdscr):
 
