@@ -1,0 +1,20 @@
+OpenPlayer documentation (Rev 0)
+
+Chapter 1: Keybinds
+
+Global keybinds
+
+>: Console
+H: Documentation
+P: Playlist menu
+
+Generic keybinds
+
+M: Submenu
+ESC: Go back
+
+Playlist menu
+
+V: View playlist
+Return: Play playlist
+
