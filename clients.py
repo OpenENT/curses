@@ -3,7 +3,8 @@ import json
 
 class PlayerD:
 
-    def __init__(self, host):
+    def __init__(self, instance, host):
+        self.instance = instance
         self.host = host
 
     def play(self, url: str):
@@ -36,11 +37,18 @@ class PlayerD:
     def playlist_go(self, index: int):
         return requests.get(self.host+"/action", params={'type': 'playlist_go', 'arg': index}).text
     
+    def check_download(self, song) -> str:
+        if self.instance.settings.providers[song['provider']]['prefer_download']:
+            res = self.instance.backend.download(song)
+            if 'stream_url' in res:
+                return res['stream_url']
+        return song['stream_url']
+
     def play_playlist(self, playlist):
         self.close()
         self.playlist_clear()
         for song in playlist['songs']:
-            self.playlist_append(song['stream_url'])
+            self.playlist_append(self.check_download(song))
         self.playlist_go(0)
 
     def get_status(self):
