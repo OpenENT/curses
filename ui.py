@@ -1,4 +1,3 @@
-from playlist import playlist_to_list
 import curses
 import glob
 import time
@@ -309,8 +308,8 @@ class PlaylistIntent(ListIntent):
                 if ret == 'debug':
                     return False, EditorIntent(self.instance, self.playlist['songs'][self.index])
                 if ret == 'delete':
-                    self.playlist['songs'].pop(self.index)
-                    self.items = playlist_to_list(self.playlist)
+                    self.playlist['songs'].remove(self.items[self.index].object)
+                    self.items.pop(self.index)
                     self.index -= 1
                     self.instance.playlist.save()
                 self.submenu = None
