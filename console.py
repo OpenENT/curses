@@ -139,7 +139,7 @@ class Console():
         if text.startswith("!"):
             split = text[1:].split(" ")
             command = split[0]
-            args = text[len(command)+1:]
+            args = text[len(command)+2:]
             if command in self.instance.backend.providers:
                 res = self.instance.backend.search(provider=command, query=args)
                 return SearchIntent(self.instance, res)
