@@ -78,11 +78,14 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
                     self.instance.player.resume()
                 else:
                     self.instance.player.pause()
-
+        elif not self.status['playing']:
+            return
         elif char == 337: # shift + up
-            self.instance.player.set_volume(self.status['volume'] + 10)
+            self.instance.player.set_volume(self.status['volume'] + self.instance.settings.volume_steps)
+            self.status['volume'] += self.instance.settings.volume_steps
         elif char == 336: # shift + down
-            self.instance.player.set_volume(self.status['volume'] - 10)
+            self.instance.player.set_volume(self.status['volume'] - self.instance.settings.volume_steps)
+            self.status['volume'] -= self.instance.settings.volume_steps
         elif char == 4: # ctrl+d
             self.instance.player.close()
 
@@ -192,6 +195,13 @@ class PlaylistSubmenu(Submenu):
             return False, None
         return ret
 
+class ListItem:
+
+    def __init__(self, object, text='Item', description='No description'):
+        self.object = object
+        self.text = text
+        self.description = description
+
 class ListIntent(Intent):
 
     def __init__(self, items):
@@ -201,14 +211,16 @@ class ListIntent(Intent):
 
     def render(self, stdscr, x, y, w, h):
         i = 0
-        offset = max(0, self.index - h + 1)
+        offset = max(0, self.index - h + 2)
         for k in range(offset, len(self.items)):
             item = self.items[k]
-            stdscr.addstr(y+i, x, " "*(w)) # Clear line
-            stdscr.addstr(y+i, x, item[:w], curses.color_pair(1 if i + offset == self.index else 0))
+            stdscr.addstr(y+i, x, " "*(w))
+            stdscr.addstr(y+i, x, item.text[:w], curses.color_pair(1 if i + offset == self.index else 0))
             i += 1
             if i == y+h-1:
                 break
+        stdscr.addstr(y+h-1, x, " "*(w))
+        stdscr.addstr(y+h-1, x, self.items[self.index].description[:w])
 
     def input(self, char):
         if char == 259:
@@ -218,7 +230,7 @@ class ListIntent(Intent):
             if self.index < len(self.items) - 1:
                 self.index += 1
         elif char == 10:
-            return self.index
+            return self.items[self.index]
         elif char == 27:
             return 'exit'
         return None
@@ -230,18 +242,16 @@ class SearchIntent(ListIntent):
         self.results = results
         self.on_submenu = False
         self.submenu = None
-        self.filtered = list()
         self.items = list()
         self.index = 0
         for res in self.results:
             if res['type'] == "song":
-                self.filtered.append(res)
-                self.items.append(res['title'])
+                self.items.append(ListItem(res, res['title'], f'Provider: {res["provider"]}'))
 
     def render(self, stdscr, x, y, w, h):
         super().render(stdscr, x, y, w, h)
         if self.on_submenu:
-            self.submenu.render(stdscr, x+w-16, y+self.index, 16, 4)
+            self.submenu.render(stdscr, int(x+w/2-8), int(y+h/2-2), 16, 4)
 
     def input(self, char):
         if self.on_submenu:
@@ -253,8 +263,10 @@ class SearchIntent(ListIntent):
                     return False, None
                 elif ret == 'queue':
                     pass
+                elif ret == 'debug':
+                    return False, EditorIntent(self.instance, self.items[self.index].object)
                 elif type(ret) is dict:
-                    ret['songs'].append(self.filtered[self.index])
+                    ret['songs'].append(self.items[self.index].object)
                     self.instance.playlist.save()
                 self.submenu = None
                 self.on_submenu = False 
@@ -262,9 +274,11 @@ class SearchIntent(ListIntent):
             return False, None
         ret = super().input(char)
         if char == 10:
-            self.instance.player.play(url=self.instance.player.check_download(self.filtered[self.index]))
+            self.instance.player.play(url=self.instance.player.check_download(self.items[self.index].object))
         elif char == 109:
             self.submenu = Submenu({'playlist': 'Add to playlist', 'queue': 'Add to queue'})
+            if self.instance.settings.debug_mode:
+                self.submenu.choices['debug'] = 'Edit JSON'
             self.on_submenu = True
         elif char == 27:
             return True, None
@@ -278,12 +292,15 @@ class PlaylistIntent(ListIntent):
         self.playlist = playlist
         self.on_submenu = False
         self.submenu = None
-        super().__init__(playlist_to_list(playlist))
+        self.index = 0
+        self.items = list()
+        for song in playlist['songs']:
+            self.items.append(ListItem(song, song['title'], f'Provider: {song["provider"]}'))
 
     def render(self, stdscr, x, y, w, h):
         super().render(stdscr, x, y, w, h)
         if self.on_submenu:
-            self.submenu.render(stdscr, x+w-16, y+self.index, 16, 4)
+            self.submenu.render(stdscr, int(x+w/2-8), int(y+h/2-1), 16, 4)
 
     def input(self, char):
         if self.on_submenu:
@@ -328,17 +345,18 @@ class EditorIntent(Intent):
         self.editing_field = ''
 
     def render(self, stdscr, x, y, w, h):
+        self.instance.override_global_keys = True
         i = 0
         if type(self.object) is dict:
             for k, v in self.object.items():
                 if self.index == i:
                     if self.editing:
-                        stdscr.addstr(y+i, x, f'{k}: {self.editing_field}', curses.color_pair(1))
+                        stdscr.addstr(y+i, x, f'{k}: {self.editing_field}'[:w], curses.color_pair(1))
                     else:
                         self.item = (k, v)
-                        stdscr.addstr(y+i, x, f'{k}: {v}', curses.color_pair(1))
+                        stdscr.addstr(y+i, x, f'{k}: {v}'[:w], curses.color_pair(1))
                 else:
-                    stdscr.addstr(y+i, x, f'{k}: {v}')
+                    stdscr.addstr(y+i, x, f'{k}: {v}'[:w])
                 i += 1
         elif type(self.object) is list:
             for k in self.object:
