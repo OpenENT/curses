@@ -1,16 +1,22 @@
-import glob
+from pathlib import Path
 import json
+import re
 
 class PlaylistManager:
 
     def __init__(self, path):
         self.path = path
         self.playlists = list()
-        for file in glob.glob(f"{path}/*.json"):
+        p = Path(path)
+        p.mkdir(parents=True, exist_ok=True)
+        for file in p.rglob("*.json"):
             with open(file) as f:
-                data = json.load(f)
-                if 'type' in data and data['type'] == 'playlist':
-                    self.playlists.append(data)
+                try:
+                    data = json.load(f)
+                    if 'type' in data and data['type'] == 'playlist':
+                        self.playlists.append(data)
+                except Exception:
+                    pass
 
     def save(self):
         for playlist in self.playlists:
