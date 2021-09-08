@@ -71,6 +71,8 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
             stdscr.addstr(y, x, "Not playing", curses.color_pair(self.color_pair))
     
     def input(self, char):
+        if self.status is None:
+            return
         if char == 32:
             if self.status is not None and self.status['playing']:
                 if self.status['paused']:
@@ -189,7 +191,7 @@ class PlaylistSubmenu(Submenu):
                 else:
                     return self.instance.playlist.playlists[ret]
         elif self.global_mode:
-            if char == 118:
+            if char == 118 and self.index < len(self.choices) - 1:
                 return True, PlaylistIntent(self.instance, self.instance.playlist.playlists[[*self.choices][self.index]])
             return False, None
         return ret
@@ -211,6 +213,9 @@ class ListIntent(Intent):
     def render(self, stdscr, x, y, w, h):
         i = 0
         offset = max(0, self.index - h + 2)
+        if len(self.items) == 0:
+            stdscr.addstr(y+i, x, 'Nothing here.', curses.color_pair(1 if i + offset == self.index else 0))
+            return
         for k in range(offset, len(self.items)):
             item = self.items[k]
             stdscr.addstr(y+i, x, " "*(w))
@@ -229,6 +234,8 @@ class ListIntent(Intent):
             if self.index < len(self.items) - 1:
                 self.index += 1
         elif char == 10:
+            if len(self.items) == 0:
+                return None
             return self.items[self.index]
         elif char == 27:
             return 'exit'

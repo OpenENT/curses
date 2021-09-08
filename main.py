@@ -42,7 +42,7 @@ class Player:
             if provider not in self.settings.providers:
                 self.settings.providers[provider] = settings.ProviderSettings(provider)
         if len(self.settings.global_search) == 0:
-            self.settings.global_search = self.backend.providers.clone()
+            self.settings.global_search = self.backend.providers.copy()
         self.settings.save()
         return True
 
