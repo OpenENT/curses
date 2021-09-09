@@ -66,7 +66,7 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
         elif self.status['playing']:
             current = time.strftime('%M:%S', time.gmtime(int(self.status['position'])))
             duration = time.strftime('%M:%S', time.gmtime(int(self.status['duration'])))
-            stdscr.addstr(y, x, f"{current} / {duration} - {self.status['name']}", curses.color_pair(self.color_pair))
+            stdscr.addstr(y, x, f"{current} / {duration} - {self.status['name']}"[:w-20], curses.color_pair(self.color_pair)) # IDK WTF is going on
         else:
             stdscr.addstr(y, x, "Not playing", curses.color_pair(self.color_pair))
     
