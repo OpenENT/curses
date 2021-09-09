@@ -1,5 +1,7 @@
-from ui import SearchIntent, PlaylistIntent, EditorIntent
+from ui import ExceptionIntent, SearchIntent, PlaylistIntent, EditorIntent
 from clients import PlayerD, Backend
+from traceback import format_exc
+
 import playlist
 
 class Command():
@@ -141,15 +143,24 @@ class Console():
             command = split[0]
             args = text[len(command)+2:]
             if command in self.instance.backend.providers:
-                res = self.instance.backend.search(provider=command, query=args)
-                return SearchIntent(self.instance, res)
+                try:
+                    res = self.instance.backend.search(provider=command, query=args)
+                    return SearchIntent(self.instance, res)
+                except Exception as e:
+                    return ExceptionIntent(e, format_exc())
             else:
                 for cmd in self.commands:
                     if command == cmd.name:
-                        return cmd.execute(self.instance, split, args)
+                        try:
+                            return cmd.execute(self.instance, split, args)
+                        except Exception as e:
+                            return ExceptionIntent(e, format_exc())
         else:
-            if self.instance.settings.collect_history:
-                self.instance.settings.history.append(text)
-                self.instance.settings.save()
-            res = self.instance.backend.search_all(query=text, providers=self.instance.settings.global_search)
-            return SearchIntent(self.instance, res)            
+            try:
+                if self.instance.settings.collect_history:
+                    self.instance.settings.history.append(text)
+                    self.instance.settings.save()
+                res = self.instance.backend.search_all(query=text, providers=self.instance.settings.global_search)
+                return SearchIntent(self.instance, res)            
+            except Exception as e:
+                return ExceptionIntent(e, format_exc())
