@@ -279,15 +279,17 @@ class SearchIntent(ListIntent):
                 self.instance.refresh = True
             return False, None
         ret = super().input(char)
-        if char == 10:
+        if char == 27:
+            return True, None
+        elif len(self.items) == 0:
+            return False, None
+        elif char == 10:
             self.instance.player.play(url=self.instance.player.check_download(self.items[self.index].object))
         elif char == 109:
             self.submenu = Submenu({'playlist': 'Add to playlist', 'queue': 'Add to queue'})
             if self.instance.settings.debug_mode:
                 self.submenu.choices['debug'] = 'Edit JSON'
             self.on_submenu = True
-        elif char == 27:
-            return True, None
         
         return False, None
 
@@ -438,6 +440,25 @@ class DocsIntent(Intent):
         elif char == 258:
             if self.index < len(self.pages) - 1:
                 self.index += 1
+        elif char == 27:
+            return True, None
+        return False, None
+
+class ExceptionIntent(Intent):
+    
+    def __init__(self, exception, traceback='No traceback'):
+        super().__init__()
+        self.exception = exception
+        self.traceback = traceback
+    
+    def render(self, stdscr, x, y, w, h):
+        stdscr.addstr(y, x, 'An error occurred. Press Enter to raise Exception for debugging.')
+        stdscr.addstr(y+1, x, repr(self.exception))
+        stdscr.addstr(y+2, x, repr(self.traceback))
+
+    def input(self, char):
+        if char == 10:
+            raise self.exception
         elif char == 27:
             return True, None
         return False, None
