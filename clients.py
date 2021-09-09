@@ -8,41 +8,74 @@ class PlayerD:
         self.host = host
 
     def play(self, url: str):
-        return requests.get(self.host+"/action", params={'type': 'play', 'arg': url}).text
+        try:
+            return requests.get(self.host+"/action", params={'type': 'play', 'arg': url}).text
+        except:
+            return None
 
     def resume(self):
-        return requests.get(self.host+"/action", params={'type': 'resume'}).text
-
+        try:
+            return requests.get(self.host+"/action", params={'type': 'resume'}).text
+        except:
+            return None
+        
     def pause(self):
-        return requests.get(self.host+"/action", params={'type': 'pause'}).text
+        try:
+            return requests.get(self.host+"/action", params={'type': 'pause'}).text
+        except:
+            return None
 
     def close(self):
-        return requests.get(self.host+"/action", params={'type': 'close'}).text
+        try:
+            return requests.get(self.host+"/action", params={'type': 'close'}).text
+        except:
+            return None
 
     def set_volume(self, volume: int):
-        return requests.get(self.host+"/action", params={'type': 'volume', 'arg': volume}).text
+        try:
+            return requests.get(self.host+"/action", params={'type': 'volume', 'arg': volume}).text
+        except:
+            return None
 
     def go_at(self, seconds: int):
-        return requests.get(self.host+"/action", params={'type': 'go_at', 'arg': seconds}).text
-    
-    def playlist_append(self, url: str):
-        return requests.get(self.host+"/action", params={'type': 'playlist_append', 'arg': url}).text
+        try:
+            return requests.get(self.host+"/action", params={'type': 'go_at', 'arg': seconds}).text
+        except:
+            return None
 
+    def playlist_append(self, url: str):
+        try:
+            return requests.get(self.host+"/action", params={'type': 'playlist_append', 'arg': url}).text
+        except:
+            return None
+    
     def playlist_remove(self, index: int):
-        return requests.get(self.host+"/action", params={'type': 'playlist_remove', 'arg': index}).text
-    
+        try:
+            return requests.get(self.host+"/action", params={'type': 'playlist_remove', 'arg': index}).text
+        except:
+            return None
+
     def playlist_clear(self):
-        return requests.get(self.host+"/action", params={'type': 'playlist_clear'}).text
-    
+        try:
+            return requests.get(self.host+"/action", params={'type': 'playlist_clear'}).text
+        except:
+            return None
+
     def playlist_go(self, index: int):
-        return requests.get(self.host+"/action", params={'type': 'playlist_go', 'arg': index}).text
-    
+        try:
+            return requests.get(self.host+"/action", params={'type': 'playlist_go', 'arg': index}).text
+        except:
+            return None
+
     def check_download(self, song) -> str:
-        if self.instance.settings.providers[song['provider']]['prefer_download']:
-            res = self.instance.backend.download(song)
-            if 'stream_url' in res:
-                return res['stream_url']
-        return song['stream_url']
+        try:
+            if self.instance.settings.providers[song['provider']]['prefer_download']:
+                res = self.instance.backend.download(song)
+                if 'stream_url' in res:
+                    return res['stream_url']
+            return song['stream_url']
+        except:
+            return None
 
     def play_playlist(self, playlist):
         self.close()
