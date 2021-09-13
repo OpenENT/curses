@@ -224,7 +224,7 @@ class ListIntent(Intent):
             if i == y+h-1:
                 break
         stdscr.addstr(y+h-1, x, " "*(w))
-        stdscr.addstr(y+h-1, x, self.items[self.index].description[:w])
+        stdscr.addstr(y+h-1, x, self.items[self.index].description[:w-6])
 
     def input(self, char):
         if char == 259:
@@ -252,7 +252,7 @@ class SearchIntent(ListIntent):
         self.index = 0
         for res in self.results:
             if res['type'] == "song":
-                self.items.append(ListItem(res, res['title'], f'Provider: {res["provider"]}'))
+                self.items.append(ListItem(res, res['title'], f'Provider: {res["provider"]} Artist: {res["album"]["artist"]["name"] if "album" in res else "Unknown"}'))
 
     def render(self, stdscr, x, y, w, h):
         super().render(stdscr, x, y, w, h)
@@ -303,7 +303,7 @@ class PlaylistIntent(ListIntent):
         self.index = 0
         self.items = list()
         for song in playlist['songs']:
-            self.items.append(ListItem(song, song['title'], f'Provider: {song["provider"]}'))
+            self.items.append(ListItem(song, song['title'], f'Provider: {song["provider"]}  Artist: {song["album"]["artist"]["name"] if "album" in song else "Unknown"}'))
 
     def render(self, stdscr, x, y, w, h):
         super().render(stdscr, x, y, w, h)
