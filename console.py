@@ -112,7 +112,7 @@ class PlaylistCommand(Command):
     def execute(self, instance, split, args):
         if len(split) < 3:
             return 'Usage: !playlist {play/add/remove} {NAME}'
-        name = args[len(split[1]) + 2:]
+        name = args[len(split[1]) + 1:]
         if split[1] == 'add':
             instance.playlist.playlists.append(playlist.playlist(name))
         plist = None
