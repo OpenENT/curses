@@ -130,6 +130,7 @@ class MainIntent(Intent):
 
     def render(self, stdscr, x, y, w, h):
         stdscr.addstr(y, x, "Working")
+    
 
 class Submenu(Intent):
 
@@ -329,8 +330,8 @@ class PlaylistIntent(ListIntent):
         if ret is not None:
             if ret == 'exit':
                 return True, None
-            playlist = self.playlist['songs'][ret]
-            return True, None
+            self.instance.player.play(url=self.instance.player.check_download(self.items[self.index].object))
+            return False, None
         elif char == 109:
             self.submenu = Submenu({'delete': 'Delete'})
             if self.instance.settings.debug_mode:
