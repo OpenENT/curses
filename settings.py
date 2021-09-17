@@ -1,3 +1,4 @@
+from playlist import playlist
 import json
 
 def ProviderSettings(provider, prefer_download=True):
@@ -10,6 +11,7 @@ class Settings:
         self.providers = dict()
         self.global_search = []
         self.history = list()
+        self.song_history = playlist('Last played')
         self.collect_history = True
         self.refresh_rate = 60
         self.background = 255 # White
