@@ -79,7 +79,7 @@ class PlayerD:
 
     def play_song(self, song):
         if self.instance.settings.collect_history:
-            self.instance.settings.song_history['songs'].append(song)
+            self.instance.settings.song_history['songs'].insert(0, song)
             self.instance.settings.save()
         self.play(self.check_download(song))
 
