@@ -77,6 +77,12 @@ class PlayerD:
         except:
             return None
 
+    def play_song(self, song):
+        if self.instance.settings.collect_history:
+            self.instance.settings.song_history['songs'].append(song)
+            self.instance.settings.save()
+        self.play(self.check_download(song))
+
     def play_playlist(self, playlist):
         self.close()
         self.playlist_clear()
