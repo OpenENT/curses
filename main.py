@@ -26,7 +26,7 @@ class Player:
         self.menu = None
         self.menu_override = False
         self.override_global_keys = False
-        self.intents = [MainIntent()]
+        self.intents = [MainIntent(self)]
         self.old_w = 0
         self.old_h = 0
         self.refresh = False
