@@ -125,12 +125,127 @@ class ConsoleIntent(Intent):
 
 class MainIntent(Intent):
 
-    def __init__(self):
+    def __init__(self, instance):
         super().__init__()
+        self.instance = instance
+        self.index = [0, 0, 0, 0]
 
     def render(self, stdscr, x, y, w, h):
-        stdscr.addstr(y, x, "Working")
-    
+        offset_x = 0
+        offset_y = 1
+        stdscr.addstr(y, x, "Playlists")
+        i = 0
+        
+        for playlist in self.instance.playlist.playlists:
+            if offset_x + len(playlist['name']) > w:
+                offset_x = 0
+                offset_y += 1
+            stdscr.addstr(y+offset_y, x+offset_x, playlist['name'], curses.color_pair(1 if self.index[3] == 0 else 2) if self.index[0] == i else curses.color_pair(0))
+            offset_x += len(playlist['name']) + 1
+            i += 1
+
+        if i == 0:
+            stdscr.addstr(y+offset_y, x+offset_x, "Nothing here", curses.color_pair(1 if self.index[3] == 0 else 2) if self.index[0] == i else curses.color_pair(0))
+        
+        offset_y += 1
+        stdscr.addstr(y+offset_y, x, "Last played")
+        offset_y += 1
+        offset_x = 0
+        i = 0
+        
+        for i in range(0, min(25, len(self.instance.settings.song_history['songs']))):
+            song = self.instance.settings.song_history['songs'][i]
+            if offset_x + len(song['title']) > w:
+                offset_x = 0
+                offset_y += 1
+            stdscr.addstr(y+offset_y, x+offset_x, song['title'], curses.color_pair(1 if self.index[3] == 1 else 2) if self.index[1] == i else curses.color_pair(0))
+            offset_x += len(song['title']) + 1
+        
+        if i == 0:
+            stdscr.addstr(y+offset_y, x+offset_x, "Nothing here", curses.color_pair(1 if self.index[3] == 1 else 2) if self.index[1] == i else curses.color_pair(0))
+        offset_y += 1
+
+        stdscr.addstr(y+offset_y, x, "Search history")
+        offset_y += 1
+        offset_x = 0
+        i = 0
+        
+        for i in range(0, min(25, len(self.instance.settings.history))):
+            query = self.instance.settings.history[i]
+            if offset_x + len(query) > w:
+                offset_x = 0
+                offset_y += 1
+            stdscr.addstr(y+offset_y, x+offset_x, query, curses.color_pair(1 if self.index[3] == 2 else 2) if self.index[2] == i else curses.color_pair(0))
+            offset_x += len(query) + 1
+            offset_y += 0
+        
+        if i == 0:
+            stdscr.addstr(y+offset_y, x+offset_x, "Nothing here", curses.color_pair(1 if self.index[3] == 2 else 2) if self.index[2] == i else curses.color_pair(0))
+            offset_y += 1
+
+        keybinds = {'>': 'Console', 'P': 'Playlists', 'V': 'View playlist', 'H': 'Help', 'Ret': 'Return'}
+        offset_x = 0
+        for keybind, description in keybinds.items():
+            stdscr.addstr(y+h-2, x+offset_x, keybind, curses.color_pair(1))
+            stdscr.addstr(y+h-2, x+offset_x+len(keybind) + 1, description)
+            offset_x += len(keybind) + len(description) + 2
+            
+    def input(self, char):
+        if char == 259:
+            self.index[3] -= 1
+            if self.index[3] < 0:
+                self.index[3] = 0
+        elif char == 258:
+            self.index[3] += 1
+            if self.index[3] > 1:
+                self.index[3] = 2
+        elif char == 261:
+            if self.index[3] == 0:
+                self.index[0] += 1
+                if self.index[0] >= len(self.instance.playlist.playlists):
+                    self.index[0] = max(0, len(self.instance.playlist.playlists) - 1)
+            elif self.index[3] == 1:
+                self.index[1] += 1
+                if self.index[1] >= len(self.instance.settings.song_history['songs']):
+                    self.index[1] = max(0, len(self.instance.settings.song_history['songs']) - 1)
+            elif self.index[3] == 2:
+                self.index[2] += 1
+                if self.index[2] >= len(self.instance.settings.history):
+                    self.index[2] = max(0, len(self.instance.settings.history) - 1)
+
+        elif char == 260:
+            self.index[self.index[3]] -= 1
+            if self.index[self.index[3]] < 0:
+                self.index[self.index[3]] = 0
+        elif char == 118 and self.index[3] == 0:
+            if len(self.instance.playlist.playlists) == 0:
+                return False, None
+            return False, PlaylistIntent(self.instance, self.instance.playlist.playlists[self.index[0]])
+        elif char == 10:
+            if self.index[3] == 0:
+                if len(self.instance.playlist.playlists) == 0:
+                    return False, None
+                self.instance.player.play_playlist(self.instance.playlist.playlists[self.index[0]])
+            elif self.index[3] == 1:
+                if len(self.instance.settings.song_history['songs']) == 0:
+                    return False, None
+                self.instance.player.play(self.instance.player.check_download(self.instance.settings.song_history['songs'][self.index[1]]))
+            elif self.index[3] == 2:
+                if len(self.instance.settings.history) == 0:
+                    return False, None
+                text = self.instance.settings.history[self.index[2]]
+                if self.instance.cache.get_cache('search', text) is not None:
+                    res = self.instance.cache.get_cache('search', text)['res']
+                else:
+                    res = self.instance.backend.search_all(query=text, providers=self.instance.settings.global_search)
+                    if self.instance.settings.collect_cache:
+                        self.instance.cache.put_cache('search', text, {'res': res})
+                return False, SearchIntent(self.instance, res)
+            return False, None
+        elif char == 27:
+            return False, None
+        return False, None
+
 
 class Submenu(Intent):
 
@@ -285,7 +400,7 @@ class SearchIntent(ListIntent):
         elif len(self.items) == 0:
             return False, None
         elif char == 10:
-            self.instance.player.play(url=self.instance.player.check_download(self.items[self.index].object))
+            self.instance.player.play_song(self.items[self.index].object)
         elif char == 109:
             self.submenu = Submenu({'playlist': 'Add to playlist', 'queue': 'Add to queue'})
             if self.instance.settings.debug_mode:
@@ -330,7 +445,7 @@ class PlaylistIntent(ListIntent):
         if ret is not None:
             if ret == 'exit':
                 return True, None
-            self.instance.player.play(url=self.instance.player.check_download(self.items[self.index].object))
+            self.instance.player.play_song(self.items[self.index].object)
             return False, None
         elif char == 109:
             self.submenu = Submenu({'delete': 'Delete'})
