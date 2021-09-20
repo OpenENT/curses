@@ -12,6 +12,9 @@ class Settings:
         self.global_search = []
         self.history = list()
         self.song_history = playlist('Last played')
+        self.cache_timeout = 60*60
+        self.collect_cache = True
+        self.save_cache = True
         self.collect_history = True
         self.refresh_rate = 60
         self.background = 255 # White
@@ -29,6 +32,25 @@ class Settings:
                 self.__dict__.update(json.load(f))
         except FileNotFoundError:
             self.save()
+   
+    def insert_history(self, query):
+        for q in self.history:
+            if q.lower() == query.lower():
+                self.history.remove(q)
+                self.history.insert(0, query)
+                return
+        self.history.insert(0, query)
+        self.save()
+
+    def insert_song(self, song):
+        songs = self.song_history['songs']
+        for s in songs:
+            if s['title'] == song['title']:
+                songs.remove(s)
+                songs.insert(0, s)
+                return
+        songs.insert(0, song)
+        self.save()
 
     def save(self):
         with open(self.path, 'w') as f:

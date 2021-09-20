@@ -158,9 +158,13 @@ class Console():
         else:
             try:
                 if self.instance.settings.collect_history:
-                    self.instance.settings.history.insert(0, text)
-                    self.instance.settings.save()
-                res = self.instance.backend.search_all(query=text, providers=self.instance.settings.global_search)
+                    self.instance.settings.insert_history(text)
+                if self.instance.cache.get_cache('search', text) is not None:
+                    res = self.instance.cache.get_cache('search', text)['res']
+                else:
+                    res = self.instance.backend.search_all(query=text, providers=self.instance.settings.global_search)
+                    if self.instance.settings.collect_cache:
+                        self.instance.cache.put_cache('search', text, {'res': res})
                 return SearchIntent(self.instance, res)            
             except Exception as e:
                 return ExceptionIntent(e, format_exc())

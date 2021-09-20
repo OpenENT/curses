@@ -3,7 +3,7 @@ from playlist import PlaylistManager
 from clients import PlayerD, Backend
 from console import Console
 from curses import wrapper
-
+from cache import Cache
 import settings
 import curses
 import time
@@ -15,6 +15,7 @@ class Player:
         self.settings = settings.Settings('settings.json')
         self.playlist = PlaylistManager('playlists')
         self.player = PlayerD(self, self.settings.playerd)
+        self.cache = Cache('cache.json', self.settings)
         self.set_backend(Backend(self.settings.backend))
         self.init_gui()
 
