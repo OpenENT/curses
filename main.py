@@ -21,7 +21,7 @@ class Player:
 
     def init_gui(self):
         self.playingstatus = PlayingStatusIntent(self)
-        self.titlebar = TitleBarIntent(self.settings.titlebar_title)
+        self.titlebar = TitleBarIntent(self)
         self.console = ConsoleIntent(Console(self))
         self.console_override = False
         self.menu = None

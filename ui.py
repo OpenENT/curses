@@ -1,6 +1,25 @@
+import unicodedata
 import curses
 import glob
 import time
+
+def clear_line(stdscr, x, y, w, color_pair=0):
+    stdscr.addstr(y, x, " "*(w), curses.color_pair(color_pair))
+
+def str_len(str):  # I hate curses
+    l = 0
+    for c in str:
+        l += 2 if unicodedata.east_asian_width(c) == "W" else 1
+    return l
+
+def cut_text(old_index, string, w):
+    strlen = str_len(string)
+    if strlen < w:
+        return 0, string
+    ob = strlen -w
+    if old_index >= ob:
+        return -old_index, string[abs(old_index):w-abs(old_index)]
+    return old_index + 1, string[abs(old_index):w-abs(old_index+1)]
 
 class Intent:
 
@@ -15,25 +34,24 @@ class Intent:
 
 class TitleBarIntent(Intent):
 
-    def __init__(self, title, color_pair=1):
-        super().__init__()
-        self.title = title
-        self.color_pair = color_pair
-        
-    def render(self, stdscr, x, y, w, h):
-        strlen = len(self.title)
-        padding = " " * int((w - strlen) / 2)
-        stdscr.addstr(y, x, f"{padding}{self.title}{padding}", curses.color_pair(self.color_pair))
-
-class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
-
-    def __init__(self, instance, color_pair=1):
+    def __init__(self, instance):
         super().__init__()
         self.instance = instance
-        self.color_pair = color_pair
+        
+    def render(self, stdscr, x, y, w, h):
+        strlen = len(self.instance.settings.titlebar_title)
+        padding = " " * int((w - strlen) / 2)
+        stdscr.addstr(y, x, f"{padding}{self.instance.settings.titlebar_title}{padding}", curses.color_pair(1))
+
+class PlayingStatusIntent(Intent):
+
+    def __init__(self, instance):
+        super().__init__()
+        self.instance = instance
         self.time = time.time()
         self.override = False
         self.status_text = ''
+        self.anim = 0
         try:
             self.status = self.instance.player.get_status()
         except:
@@ -41,20 +59,21 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
 
     def render(self, stdscr, x, y, w, h):
 
-        try: # bruh
-            stdscr.addstr(y, x, " "*(w), curses.color_pair(self.color_pair)) # Clear line
+        try: # Workaround for python's curses bug, where you can't write to the last cell without raising an Exception 
+            clear_line(stdscr, x, y, w, 1)
         except:
             pass
-        
-        if self.override:
-
-            stdscr.addstr(y, x, self.status_text, curses.color_pair(self.color_pair))
+        if self.override: # Display status_text instead
+            stdscr.addstr(y, x, self.status_text, curses.color_pair(1))
             if time.time() - self.time > 2:
                 self.time = time.time()
                 self.override = False
             return
         
+        update = False
+
         if time.time() - self.time > 1:
+            update = True
             self.time = time.time()
             try:
                 self.status = self.instance.player.get_status()
@@ -62,18 +81,26 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
                 self.status = None
 
         if self.status is None:
-            stdscr.addstr(y, x, "Can't connect to PlayerD", curses.color_pair(self.color_pair))
+            stdscr.addstr(y, x, "Can't connect to PlayerD", curses.color_pair(1))
         elif self.status['playing']:
             current = time.strftime('%M:%S', time.gmtime(int(self.status['position'])))
             duration = time.strftime('%M:%S', time.gmtime(int(self.status['duration'])))
-            stdscr.addstr(y, x, f"{current} / {duration} - {self.status['name']}"[:w-20], curses.color_pair(self.color_pair)) # IDK WTF is going on
+            string = f"{current} / {duration} - {self.status['name']} {w}"
+            string += f" {str_len(string)}"
+            i, s = cut_text(self.anim, string, w)
+            try:
+                stdscr.addstr(y, 0, s, curses.color_pair(1))
+            except:
+                pass
+            if update:
+                self.anim = i
         else:
-            stdscr.addstr(y, x, "Not playing", curses.color_pair(self.color_pair))
+            stdscr.addstr(y, x, "Not playing", curses.color_pair(1))
     
     def input(self, char):
         if self.status is None:
             return
-        if char == 32:
+        if char == 32: # Space
             if self.status is not None and self.status['playing']:
                 if self.status['paused']:
                     self.instance.player.resume()
@@ -92,9 +119,8 @@ class PlayingStatusIntent(Intent): # TODO: Text transition when text len > width
 
 class ConsoleIntent(Intent):
 
-    def __init__(self, engine, color_pair=1):
+    def __init__(self, engine):
         super().__init__()
-        self.color_pair = color_pair
         self.engine = engine
         self.text = str()
 
@@ -102,8 +128,8 @@ class ConsoleIntent(Intent):
         render_text = self.text
         if len(self.text) == 0:
             render_text = "..."
-        stdscr.addstr(y, x, " " * (x+w - 1), curses.color_pair(self.color_pair))
-        stdscr.addstr(y, x, ">" + render_text, curses.color_pair(self.color_pair))
+        stdscr.addstr(y, x, " " * (x+w - 1), curses.color_pair(1))
+        stdscr.addstr(y, x, ">" + render_text, curses.color_pair(1))
     
     def input(self, char):
         if char == 263: # delete
@@ -116,7 +142,7 @@ class ConsoleIntent(Intent):
             intent = self.engine.execute(self.text)
             self.text = ""
             return True, intent
-        elif char == 27:
+        elif char == 27: # Esc
             self.text = ''
             return True, None
         else: # Normal key
@@ -128,7 +154,7 @@ class MainIntent(Intent):
     def __init__(self, instance):
         super().__init__()
         self.instance = instance
-        self.index = [0, 0, 0, 0]
+        self.index = [0, 0, 0, 0] # [Playlist index, Song history index, Search history index, Current index]
 
     def render(self, stdscr, x, y, w, h):
         offset_x = 0
@@ -161,7 +187,7 @@ class MainIntent(Intent):
             stdscr.addstr(y+offset_y, x+offset_x, song['title'], curses.color_pair(1 if self.index[3] == 1 else 2) if self.index[1] == i else curses.color_pair(0))
             offset_x += len(song['title']) + 1
         
-        if i == 0:
+        if offset_x == 0:
             stdscr.addstr(y+offset_y, x+offset_x, "Nothing here", curses.color_pair(1 if self.index[3] == 1 else 2) if self.index[1] == i else curses.color_pair(0))
         offset_y += 1
 
@@ -179,7 +205,7 @@ class MainIntent(Intent):
             offset_x += len(query) + 1
             offset_y += 0
         
-        if i == 0:
+        if offset_x == 0:
             stdscr.addstr(y+offset_y, x+offset_x, "Nothing here", curses.color_pair(1 if self.index[3] == 2 else 2) if self.index[2] == i else curses.color_pair(0))
             offset_y += 1
 
@@ -334,12 +360,12 @@ class ListIntent(Intent):
             return
         for k in range(offset, len(self.items)):
             item = self.items[k]
-            stdscr.addstr(y+i, x, " "*(w))
+            clear_line(stdscr, x, y+i, w)
             stdscr.addstr(y+i, x, item.text[:w], curses.color_pair(1 if i + offset == self.index else 0))
             i += 1
             if i == y+h-1:
                 break
-        stdscr.addstr(y+h-1, x, " "*(w))
+        clear_line(stdscr, x, y+h-1, w)
         stdscr.addstr(y+h-1, x, self.items[self.index].description[:w-6])
 
     def input(self, char):
