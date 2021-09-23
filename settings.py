@@ -27,6 +27,16 @@ class Settings:
         self.debug_mode = False
         self.playerd = 'http://127.0.0.1:5000'
         self.backend = 'http://127.0.0.1:5001'
+        self.key_ok = 10 # return
+        self.key_exit = 27 # esc
+        self.key_pause = 32 # space
+        self.key_close = 4 # ctrl+d
+        self.key_volume_up = 337 # shift + up
+        self.key_volume_down = 336 # shift + down
+        self.key_down = 258
+        self.key_up = 259
+        self.key_left = 260
+        self.key_right = 261
         try:
             with open(self.path) as f:
                 self.__dict__.update(json.load(f))
