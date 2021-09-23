@@ -48,7 +48,7 @@ class VolumeCommand(Command):
         if len(split) > 1:
             instance.player.set_volume(volume=int(split[1]))
         else:
-            return 'Usage: !voset_backend {ADDRESS}lume {0-150}'
+            return 'Usage: !volume {0-150}'
 
 class PreferCommand(Command):
 
@@ -127,6 +127,17 @@ class PlaylistCommand(Command):
                     return PlaylistIntent(instance, plist)
                 instance.playlist.save()
 
+class CharCommand(Command):
+
+    def __init__(self):
+        super().__init__('char')
+
+    def execute(self, instance, split, args):
+        if len(split) > 1:
+            return f'{ord(args[0])}'
+        else:
+            return 'Usage: !char character'
+
 class Console():
 
     def __init__(self, instance):
@@ -134,7 +145,7 @@ class Console():
         self.commands = [
             PauseCommand(), ResumeCommand(), GoCommand(), 
             VolumeCommand(), PreferCommand(), PlayerDCommand(), BackendCommand(),
-            EditorCommand(), ReloadCommand(), PlaylistCommand()
+            EditorCommand(), ReloadCommand(), PlaylistCommand(), CharCommand()
             ]
 
     def execute(self, text):
@@ -147,14 +158,14 @@ class Console():
                     res = self.instance.backend.search(provider=command, query=args)
                     return SearchIntent(self.instance, res)
                 except Exception as e:
-                    return ExceptionIntent(e, format_exc())
+                    return ExceptionIntent(self.instance, e, format_exc())
             else:
                 for cmd in self.commands:
                     if command == cmd.name:
                         try:
                             return cmd.execute(self.instance, split, args)
                         except Exception as e:
-                            return ExceptionIntent(e, format_exc())
+                            return ExceptionIntent(self.instance, e, format_exc())
         else:
             try:
                 if self.instance.settings.collect_history:
@@ -167,4 +178,4 @@ class Console():
                         self.instance.cache.put_cache('search', text, {'res': res})
                 return SearchIntent(self.instance, res)            
             except Exception as e:
-                return ExceptionIntent(e, format_exc())
+                return ExceptionIntent(self.instance, e, format_exc())
