@@ -22,7 +22,7 @@ class Player:
     def init_gui(self):
         self.playingstatus = PlayingStatusIntent(self)
         self.titlebar = TitleBarIntent(self)
-        self.console = ConsoleIntent(Console(self))
+        self.console = ConsoleIntent(self, Console(self))
         self.console_override = False
         self.menu = None
         self.menu_override = False
@@ -96,7 +96,7 @@ class Player:
                     self.menu_override = True
                     self.menu = PlaylistSubmenu(self, True)
                 elif char == 104:
-                    self.intents.append(DocsIntent('docs'))
+                    self.intents.append(DocsIntent(self, 'docs'))
                     self.refresh = True
 
     def render(self, stdscr):
