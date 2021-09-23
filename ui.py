@@ -100,7 +100,7 @@ class PlayingStatusIntent(Intent):
     def input(self, char):
         if self.status is None:
             return
-        if char == 32: # Space
+        if char == self.instance.settings.key_pause:
             if self.status is not None and self.status['playing']:
                 if self.status['paused']:
                     self.instance.player.resume()
@@ -108,19 +108,20 @@ class PlayingStatusIntent(Intent):
                     self.instance.player.pause()
         elif not self.status['playing']:
             return
-        elif char == 337: # shift + up
+        elif char == self.instance.settings.key_volume_up:
             self.instance.player.set_volume(self.status['volume'] + self.instance.settings.volume_steps)
             self.status['volume'] += self.instance.settings.volume_steps
-        elif char == 336: # shift + down
+        elif char == self.instance.settings.key_volume_down:
             self.instance.player.set_volume(self.status['volume'] - self.instance.settings.volume_steps)
             self.status['volume'] -= self.instance.settings.volume_steps
-        elif char == 4: # ctrl+d
+        elif char == self.instance.settings.key_close:
             self.instance.player.close()
 
 class ConsoleIntent(Intent):
 
-    def __init__(self, engine):
+    def __init__(self, instance, engine):
         super().__init__()
+        self.instance = instance
         self.engine = engine
         self.text = str()
 
@@ -138,11 +139,11 @@ class ConsoleIntent(Intent):
             self.text = self.text[:-1]
         elif char == 8: # Ctrl+delete
             self.text = ""
-        elif char == 10: # Return
+        elif char == self.instance.settings.key_ok:
             intent = self.engine.execute(self.text)
             self.text = ""
             return True, intent
-        elif char == 27: # Esc
+        elif char == self.instance.settings.key_exit:
             self.text = ''
             return True, None
         else: # Normal key
@@ -217,15 +218,15 @@ class MainIntent(Intent):
             offset_x += len(keybind) + len(description) + 2
             
     def input(self, char):
-        if char == 259:
+        if char == self.instance.settings.key_up:
             self.index[3] -= 1
             if self.index[3] < 0:
                 self.index[3] = 0
-        elif char == 258:
+        elif char == self.instance.settings.key_down:
             self.index[3] += 1
             if self.index[3] > 1:
                 self.index[3] = 2
-        elif char == 261:
+        elif char == self.instance.settings.key_right:
             if self.index[3] == 0:
                 self.index[0] += 1
                 if self.index[0] >= len(self.instance.playlist.playlists):
@@ -239,7 +240,7 @@ class MainIntent(Intent):
                 if self.index[2] >= len(self.instance.settings.history):
                     self.index[2] = max(0, len(self.instance.settings.history) - 1)
 
-        elif char == 260:
+        elif char == self.instance.settings.key_left:
             self.index[self.index[3]] -= 1
             if self.index[self.index[3]] < 0:
                 self.index[self.index[3]] = 0
@@ -247,7 +248,7 @@ class MainIntent(Intent):
             if len(self.instance.playlist.playlists) == 0:
                 return False, None
             return False, PlaylistIntent(self.instance, self.instance.playlist.playlists[self.index[0]])
-        elif char == 10:
+        elif char == self.instance.settings.key_ok:
             if self.index[3] == 0:
                 if len(self.instance.playlist.playlists) == 0:
                     return False, None
@@ -268,15 +269,16 @@ class MainIntent(Intent):
                         self.instance.cache.put_cache('search', text, {'res': res})
                 return False, SearchIntent(self.instance, res)
             return False, None
-        elif char == 27:
+        elif char == self.instance.settings.key_exit:
             return False, None
         return False, None
 
 
 class Submenu(Intent):
 
-    def __init__(self, choices):
+    def __init__(self, instance, choices):
         super().__init__()
+        self.instance = instance
         self.choices = choices
         self.index = 0
     
@@ -291,15 +293,15 @@ class Submenu(Intent):
             i += 1
 
     def input(self, char):
-        if char == 259:
+        if char == self.instance.settings.key_up:
             if self.index > 0:
                 self.index -= 1
-        elif char == 258:
+        elif char == self.instance.settings.key_down:
             if self.index < len(self.choices) - 1:
                 self.index += 1
-        elif char == 10:
+        elif char == self.instance.settings.key_ok:
             return [*self.choices][self.index]
-        elif char == 27:
+        elif char == self.instance.settings.key_exit:
             return 'exit'
         return None
 
@@ -347,8 +349,9 @@ class ListItem:
 
 class ListIntent(Intent):
 
-    def __init__(self, items):
+    def __init__(self, instance, items):
         super().__init__()
+        self.instance = instance
         self.items = items
         self.index = 0
 
@@ -369,17 +372,17 @@ class ListIntent(Intent):
         stdscr.addstr(y+h-1, x, self.items[self.index].description[:w-6])
 
     def input(self, char):
-        if char == 259:
+        if char == self.instance.settings.key_up:
             if self.index > 0:
                 self.index -= 1
-        elif char == 258:
+        elif char == self.instance.settings.key_down:
             if self.index < len(self.items) - 1:
                 self.index += 1
-        elif char == 10:
+        elif char == self.instance.settings.key_ok:
             if len(self.items) == 0:
                 return None
             return self.items[self.index]
-        elif char == 27:
+        elif char == self.instance.settings.key_exit:
             return 'exit'
         return None
 
@@ -421,14 +424,14 @@ class SearchIntent(ListIntent):
                 self.instance.refresh = True
             return False, None
         ret = super().input(char)
-        if char == 27:
+        if char == self.instance.settings.key_exit:
             return True, None
         elif len(self.items) == 0:
             return False, None
-        elif char == 10:
+        elif char == self.instance.settings.key_ok:
             self.instance.player.play_song(self.items[self.index].object)
         elif char == 109:
-            self.submenu = Submenu({'playlist': 'Add to playlist', 'queue': 'Add to queue'})
+            self.submenu = Submenu(self.instance, choices={'playlist': 'Add to playlist', 'queue': 'Add to queue'})
             if self.instance.settings.debug_mode:
                 self.submenu.choices['debug'] = 'Edit JSON'
             self.on_submenu = True
@@ -474,7 +477,7 @@ class PlaylistIntent(ListIntent):
             self.instance.player.play_song(self.items[self.index].object)
             return False, None
         elif char == 109:
-            self.submenu = Submenu({'delete': 'Delete'})
+            self.submenu = Submenu(self.instance, {'delete': 'Delete'})
             if self.instance.settings.debug_mode:
                 self.submenu.choices['debug'] = 'Edit JSON'
             self.on_submenu = True
@@ -524,7 +527,7 @@ class EditorIntent(Intent):
         key = self.item[0] if type(self.object) is dict else self.index
         self.instance.refresh = True # Ugly hack
         if self.editing:
-            if char == 10:
+            if char == self.instance.settings.key_ok:
                 self.editing = False
                 self.object[key] = self.editing_field
                 self.instance.settings.save()
@@ -533,9 +536,9 @@ class EditorIntent(Intent):
                 if t is bool:
                     self.editing_field = not self.editing_field
                 if t is int:
-                    if char == 259:
+                    if char == self.instance.settings.key_up:
                         self.editing_field += 1
-                    elif char == 258:
+                    elif char == self.instance.settings.key_down:
                         self.editing_field -= 1
                 if t is str:
                     if char == 263: # delete
@@ -545,27 +548,28 @@ class EditorIntent(Intent):
                     else: # Normal key
                         self.editing_field += chr(char)
             return False, None
-        if char == 259:
+        if char == self.instance.settings.key_up:
             if self.index > 0:
                 self.index -= 1
-        elif char == 258:
+        elif char == self.instance.settings.key_down:
             if self.index < len(self.object) - 1:
                 self.index += 1
-        elif char == 10:
+        elif char == self.instance.settings.key_ok:
             item = self.item[1] if type(self.object) is dict else self.object[self.index]
             if type(item) is dict or type(item) is list:
                 return False, EditorIntent(self.instance, item)                
             self.editing = True
             self.editing_field = item
-        elif char == 27:
+        elif char == self.instance.settings.key_exit:
             self.instance.override_global_keys = False
             return True, None
         return False, None
 
 class DocsIntent(Intent):
     
-    def __init__(self, path: str):
+    def __init__(self, instance, path: str):
         super().__init__()
+        self.instance = instance
         self.pages = list()
         for file in glob.glob(f"{path}/*.txt"):
             with open(file) as f:
@@ -576,20 +580,21 @@ class DocsIntent(Intent):
         stdscr.addstr(y, x, self.pages[self.index])
 
     def input(self, char):
-        if char == 259:
+        if char == self.instance.settings.key_up:
             if self.index > 0:
                 self.index -= 1
-        elif char == 258:
+        elif char == self.instance.settings.key_down:
             if self.index < len(self.pages) - 1:
                 self.index += 1
-        elif char == 27:
+        elif char == self.instance.settings.key_exit:
             return True, None
         return False, None
 
 class ExceptionIntent(Intent):
     
-    def __init__(self, exception, traceback='No traceback'):
+    def __init__(self, instance, exception, traceback='No traceback'):
         super().__init__()
+        self.instance = instance
         self.exception = exception
         self.traceback = traceback
     
@@ -599,8 +604,8 @@ class ExceptionIntent(Intent):
         stdscr.addstr(y+2, x, repr(self.traceback))
 
     def input(self, char):
-        if char == 10:
+        if char == self.instance.settings.key_ok:
             raise self.exception
-        elif char == 27:
+        elif char == self.instance.settings.key_exit:
             return True, None
         return False, None
