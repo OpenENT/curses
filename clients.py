@@ -4,6 +4,7 @@ import json
 class PlayerD:
 
     def __init__(self, instance, host):
+        self.current_playlist = None
         self.instance = instance
         self.host = host
 
@@ -85,6 +86,7 @@ class PlayerD:
     def play_playlist(self, playlist):
         self.close()
         self.playlist_clear()
+        self.current_playlist = playlist
         for song in playlist['songs']:
             self.playlist_append(self.check_download(song))
         self.playlist_go(0)
