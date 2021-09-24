@@ -21,6 +21,19 @@ def cut_text(old_index, string, w):
         return -old_index, string[abs(old_index):w-abs(old_index)]
     return old_index + 1, string[abs(old_index):w-abs(old_index+1)]
 
+def trim(string, w):
+    l = 0
+    l2 = 0
+    for c in string:
+        l += 2 if unicodedata.east_asian_width(c) == "W" else 1
+        l2 += 1
+        if l > w:
+            return string[:l2-1]
+        elif l == w:
+            return string[:l2]
+    return string
+
+
 class Intent:
 
     def __init__(self):
@@ -285,11 +298,11 @@ class Submenu(Intent):
     def render(self, stdscr, x, y, w, h):
         i = 0
         for k, v in self.choices.items():
-            padding = " " * int((w - len(v)) / 2)
+            padding = " " * int((w - str_len(v)) / 2)
             formatted = f'{padding}{v}{padding}'
-            if len(formatted) >= w:
+            if str_len(formatted) >= w:
                 formatted = formatted[:w-1]
-            stdscr.addstr(y+i, x, formatted, curses.color_pair(2 if i == self.index else 1))
+            stdscr.addstr(y+i, x, trim(formatted, w), curses.color_pair(2 if i == self.index else 1))
             i += 1
 
     def input(self, char):
@@ -339,6 +352,30 @@ class PlaylistSubmenu(Submenu):
                 return True, PlaylistIntent(self.instance, self.instance.playlist.playlists[[*self.choices][self.index]])
             return False, None
         return ret
+
+class QueueSubmenu(Submenu):
+
+    def __init__(self, instance):
+        self.instance = instance
+        self.choices = dict()
+        self.index = 0
+        index = 0
+        for song in self.instance.player.current_playlist['songs']:
+            self.choices[index] = song['title']
+            index += 1
+        #self.choices['new'] = 'New playlist'
+
+    def input(self, char):
+        ret = super().input(char)
+        if ret is not None:
+            if ret == 'exit':
+                return True, None
+            if ret == 'new':
+                return True, None
+            else:
+                self.instance.player.playlist_go(index=ret)
+                return True, None
+        return False, None
 
 class ListItem:
 
