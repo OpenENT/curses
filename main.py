@@ -1,4 +1,4 @@
-from ui import PlayingStatusIntent, PlaylistSubmenu, TitleBarIntent, ConsoleIntent, DocsIntent, MainIntent
+from ui import PlayingStatusIntent, PlaylistSubmenu, QueueSubmenu, TitleBarIntent, ConsoleIntent, DocsIntent, MainIntent
 from playlist import PlaylistManager
 from clients import PlayerD, Backend
 from console import Console
@@ -98,6 +98,13 @@ class Player:
                 elif char == 104:
                     self.intents.append(DocsIntent(self, 'docs'))
                     self.refresh = True
+                elif char == 111:
+                    if self.player.current_playlist is None:
+                        self.playingstatus.status_text = "Queue is empty."
+                        self.playingstatus.override = True
+                        return
+                    self.menu_override = True
+                    self.menu = QueueSubmenu(self)
 
     def render(self, stdscr):
 
