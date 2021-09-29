@@ -62,8 +62,7 @@ class Player:
             if intent is not None:
                 self.refresh = True
                 if type(intent) is str:
-                    self.playingstatus.status_text = intent
-                    self.playingstatus.override = True
+                    self.playingstatus.set_custom_status(intent)
                 else:
                     self.intents.append(intent)
         elif self.menu_override:
@@ -74,8 +73,7 @@ class Player:
             if intent is not None:
                 self.refresh = True
                 if type(intent) is str:
-                    self.playingstatus.status_text = intent
-                    self.playingstatus.override = True
+                    self.playingstatus.set_custom_status(intent)
                 else:
                     self.intents.append(intent)
         else:
@@ -86,8 +84,7 @@ class Player:
             if intent is not None:
                 self.refresh = True
                 if type(intent) is str:
-                    self.playingstatus.status_text = intent
-                    self.playingstatus.override = True
+                    self.playingstatus.set_custom_status(intent)
                 else:
                     self.intents.append(intent)
             elif not ret and not self.override_global_keys:
@@ -100,8 +97,7 @@ class Player:
                     self.refresh = True
                 elif char == 111:
                     if self.player.current_playlist is None:
-                        self.playingstatus.status_text = "Queue is empty."
-                        self.playingstatus.override = True
+                        self.playingstatus.set_custom_status("Queue is empty.")
                         return
                     self.menu_override = True
                     self.menu = QueueSubmenu(self)

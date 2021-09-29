@@ -123,11 +123,18 @@ class PlayingStatusIntent(Intent):
         elif char == self.instance.settings.key_volume_up:
             self.instance.player.set_volume(self.status['volume'] + self.instance.settings.volume_steps)
             self.status['volume'] += self.instance.settings.volume_steps
+            self.set_custom_status(f"Volume: {self.status['volume']:g}%")
         elif char == self.instance.settings.key_volume_down:
             self.instance.player.set_volume(self.status['volume'] - self.instance.settings.volume_steps)
             self.status['volume'] -= self.instance.settings.volume_steps
+            self.set_custom_status(f"Volume: {self.status['volume']:g}%")
         elif char == self.instance.settings.key_close:
             self.instance.player.close()
+
+    def set_custom_status(self, text):
+        self.override = True
+        self.time = time.time()
+        self.status_text = text
 
 class ConsoleIntent(Intent):
 
