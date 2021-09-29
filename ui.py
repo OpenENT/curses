@@ -589,12 +589,17 @@ class EditorIntent(Intent):
                 t = type(self.editing_field)
                 if t is bool:
                     self.editing_field = not self.editing_field
-                if t is int:
+                elif t is int:
                     if char == self.instance.settings.key_up:
                         self.editing_field += 1
                     elif char == self.instance.settings.key_down:
                         self.editing_field -= 1
-                if t is str:
+                elif t is float:
+                    if char == self.instance.settings.key_up:
+                        self.editing_field = round(self.editing_field + 0.1, 2)
+                    elif char == self.instance.settings.key_down:
+                        self.editing_field = round(self.editing_field - 0.1, 2)
+                elif t is str:
                     if char == 263: # delete
                         self.editing_field = self.editing_field[:-1]
                     elif char == 8: # Ctrl+delete
