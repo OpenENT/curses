@@ -515,10 +515,17 @@ class PlaylistIntent(ListIntent):
             if ret is not None:
                 if ret == 'debug':
                     return False, EditorIntent(self.instance, self.playlist['songs'][self.index])
-                if ret == 'delete':
+                elif ret == 'delete':
                     self.playlist['songs'].remove(self.items[self.index].object)
                     self.items.pop(self.index)
                     self.index -= 1
+                    self.instance.playlist.save()
+                elif ret == 'playlist':
+                    self.submenu = PlaylistSubmenu(self.instance)
+                    self.instance.refresh = True
+                    return False, None
+                elif type(ret) is dict:
+                    ret['songs'].append(self.items[self.index].object)
                     self.instance.playlist.save()
                 self.submenu = None
                 self.on_submenu = False 
@@ -531,7 +538,7 @@ class PlaylistIntent(ListIntent):
             self.instance.player.play_song(self.items[self.index].object)
             return False, None
         elif char == 109:
-            self.submenu = Submenu(self.instance, {'delete': 'Delete'})
+            self.submenu = Submenu(self.instance, {'playlist': 'Add to playlist', 'delete': 'Delete'})
             if self.instance.settings.debug_mode:
                 self.submenu.choices['debug'] = 'Edit JSON'
             self.on_submenu = True
