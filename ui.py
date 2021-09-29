@@ -98,8 +98,7 @@ class PlayingStatusIntent(Intent):
         elif self.status['playing']:
             current = time.strftime('%M:%S', time.gmtime(int(self.status['position'])))
             duration = time.strftime('%M:%S', time.gmtime(int(self.status['duration'])))
-            string = f"{current} / {duration} - {self.status['name']} {w}"
-            string += f" {str_len(string)}"
+            string = f"{current} / {duration} - {self.status['name']}"
             i, s = cut_text(self.anim, string, w)
             try:
                 stdscr.addstr(y, 0, s, curses.color_pair(1))
