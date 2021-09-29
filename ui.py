@@ -121,12 +121,14 @@ class PlayingStatusIntent(Intent):
         elif not self.status['playing']:
             return
         elif char == self.instance.settings.key_volume_up:
-            self.instance.player.set_volume(self.status['volume'] + self.instance.settings.volume_steps)
-            self.status['volume'] += self.instance.settings.volume_steps
+            new_vol = min(self.instance.settings.volume_limit, self.status['volume'] + self.instance.settings.volume_steps)
+            self.instance.player.set_volume(new_vol)
+            self.status['volume'] = new_vol
             self.set_custom_status(f"Volume: {self.status['volume']:g}%")
         elif char == self.instance.settings.key_volume_down:
-            self.instance.player.set_volume(self.status['volume'] - self.instance.settings.volume_steps)
-            self.status['volume'] -= self.instance.settings.volume_steps
+            new_vol = max(0, min(self.instance.settings.volume_limit, self.status['volume'] - self.instance.settings.volume_steps))
+            self.instance.player.set_volume(new_vol)
+            self.status['volume'] = new_vol
             self.set_custom_status(f"Volume: {self.status['volume']:g}%")
         elif char == self.instance.settings.key_close:
             self.instance.player.close()

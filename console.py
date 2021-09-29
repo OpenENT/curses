@@ -46,9 +46,12 @@ class VolumeCommand(Command):
 
     def execute(self, instance, split, args):
         if len(split) > 1:
-            instance.player.set_volume(volume=int(split[1]))
+            if len(split) > 2 and bool(split[2]):
+                instance.player.set_volume(volume=int(split[1]))
+            else:
+                instance.player.set_volume(volume=max(0, min(instance.settings.volume_limit, int(split[1]))))
         else:
-            return 'Usage: !volume {0-150}'
+            return 'Usage: !volume {0-150} {bypass: false}'
 
 class PreferCommand(Command):
 

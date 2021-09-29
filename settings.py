@@ -22,6 +22,7 @@ class Settings:
         self.background_alt = 255 # White
         self.foreground_alt = 10
         self.volume_steps = 1
+        self.volume_limit = 100
         self.titlebar = True
         self.titlebar_title = 'OpenPlayer'
         self.debug_mode = False
