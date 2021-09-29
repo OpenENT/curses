@@ -1,6 +1,8 @@
 import requests
 import json
 
+from playlist import playlist
+
 class PlayerD:
 
     def __init__(self, instance, host):
@@ -44,19 +46,26 @@ class PlayerD:
         except:
             return None
 
-    def playlist_append(self, url: str):
+    def playlist_append(self, song):
+        if self.current_playlist is None:
+            self.current_playlist = playlist('Queue')
         try:
-            return requests.get(self.host+"/action", params={'type': 'playlist_append', 'arg': url}).text
-        except:
-            return None
+            r = requests.get(self.host+"/action", params={'type': 'playlist_append', 'arg': self.check_download(song)}).text
+            self.current_playlist['songs'].append(song)
+            return r
+        except Exception as e:
+            raise e
     
     def playlist_remove(self, index: int):
+        if self.current_playlist is not None:
+            del self.current_playlist[[*self.current_playlist.keys()][index]] # ? needs testing
         try:
             return requests.get(self.host+"/action", params={'type': 'playlist_remove', 'arg': index}).text
         except:
             return None
 
     def playlist_clear(self):
+        self.current_playlist = None
         try:
             return requests.get(self.host+"/action", params={'type': 'playlist_clear'}).text
         except:
@@ -78,9 +87,11 @@ class PlayerD:
         except:
             return None
 
-    def play_song(self, song):
-        if self.instance.settings.collect_history:
+    def play_song(self, song, history=True):
+        if history and self.instance.settings.collect_history:
             self.instance.settings.insert_song(song)
+        self.current_playlist = playlist('Queue')
+        self.current_playlist['songs'].append(song)
         self.play(self.check_download(song))
 
     def play_playlist(self, playlist):
@@ -119,6 +130,7 @@ class Backend:
         return json.loads(requests.get(self.host+"/download", params={'provider': song['provider'], 'stream_url': song['stream_url']}).text)
 
 def discovery(subnet): # Bad shit ngl
+    hosts = list()
     sip = subnet.split('.')
     if len(sip) != 4:
         raise Exception("Invalid subnet")
@@ -128,12 +140,7 @@ def discovery(subnet): # Bad shit ngl
         try:
             r = requests.get(f'{base}{i}:5000').text
             if 'PlayerD' in r:
-                print(f'Found PlayerD on host {base}{i}')
+                hosts.append(f"{base}{i}:5000")
         except:
             continue
-        try:
-            r = requests.get(f'{base}{i}:5001').text
-            if 'Backend' in r:
-                print(f'Found Backend on host {base}{i}')
-        except:
-            continue
+    return hosts
