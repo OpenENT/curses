@@ -326,6 +326,9 @@ class PlaylistSubmenu(Submenu):
         self.choices = dict()
         self.index = 0
         index = 0
+        if global_mode:
+            self.choices[index] = 'History'
+            index += 1
         for playlist in self.instance.playlist.playlists:
             self.choices[index] = playlist['name']
             index += 1
@@ -343,13 +346,19 @@ class PlaylistSubmenu(Submenu):
                 return True, None if self.global_mode else None
             else:
                 if self.global_mode:
-                    self.instance.player.play_playlist(self.instance.playlist.playlists[ret])
+                    if self.index == 0:
+                        self.instance.player.play_playlist(self.instance.settings.song_history)
+                    else:
+                        self.instance.player.play_playlist(self.instance.playlist.playlists[ret-1])
                     return True, None
                 else:
                     return self.instance.playlist.playlists[ret]
         elif self.global_mode:
             if char == 118 and self.index < len(self.choices) - 1:
-                return True, PlaylistIntent(self.instance, self.instance.playlist.playlists[[*self.choices][self.index]])
+                if self.index == 0:
+                    return True, PlaylistIntent(self.instance, self.instance.settings.song_history)
+                else:
+                    return True, PlaylistIntent(self.instance, self.instance.playlist.playlists[[*self.choices][self.index-1]])
             return False, None
         return ret
 
