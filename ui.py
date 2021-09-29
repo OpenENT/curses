@@ -277,7 +277,7 @@ class MainIntent(Intent):
             elif self.index[3] == 1:
                 if len(self.instance.settings.song_history['songs']) == 0:
                     return False, None
-                self.instance.player.play(self.instance.player.check_download(self.instance.settings.song_history['songs'][self.index[1]]))
+                self.instance.player.play_song(self.instance.settings.song_history['songs'][self.index[1]], False)
             elif self.index[3] == 2:
                 if len(self.instance.settings.history) == 0:
                     return False, None
@@ -467,7 +467,7 @@ class SearchIntent(ListIntent):
                     self.instance.refresh = True
                     return False, None
                 elif ret == 'queue':
-                    pass
+                    self.instance.player.playlist_append(self.items[self.index].object)
                 elif ret == 'debug':
                     return False, EditorIntent(self.instance, self.items[self.index].object)
                 elif type(ret) is dict:
