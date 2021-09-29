@@ -231,7 +231,7 @@ class MainIntent(Intent):
             stdscr.addstr(y+offset_y, x+offset_x, "Nothing here", curses.color_pair(1 if self.index[3] == 2 else 2) if self.index[2] == i else curses.color_pair(0))
             offset_y += 1
 
-        keybinds = {'>': 'Console', 'P': 'Playlists', 'V': 'View playlist', 'H': 'Help', 'Ret': 'Return'}
+        keybinds = {'>': 'Console', 'P': 'Playlists', 'V': 'View playlist', 'O': 'Queue', 'H': 'Help', 'Ret': 'Return'}
         offset_x = 0
         for keybind, description in keybinds.items():
             stdscr.addstr(y+h-2, x+offset_x, keybind, curses.color_pair(1))
