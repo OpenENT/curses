@@ -12,8 +12,8 @@ import os
 class Player:
     
     def __init__(self):
-        self.settings = settings.Settings('settings.json')
-        self.playlist = PlaylistManager('playlists')
+        self.settings = settings.Settings(settings.config_dir() + '/settings.json')
+        self.playlist = PlaylistManager(settings.data_dir() + '/playlists')
         self.player = PlayerD(self, self.settings.playerd)
         self.cache = Cache('cache.json', self.settings)
         self.set_backend(Backend(self.settings.backend))
@@ -136,6 +136,7 @@ class Player:
             time.sleep(1000 / self.settings.refresh_rate / 1000)
         self.init_gui()
         self.loop(stdscr)
+
 
 os.environ.setdefault('ESCDELAY', '0') # Fixes terrible ESC delay in menus
 wrapper(Player().loop)

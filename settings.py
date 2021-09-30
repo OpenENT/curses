@@ -1,5 +1,7 @@
 from playlist import playlist
+from pathlib import Path
 import json
+import os
 
 def ProviderSettings(provider, prefer_download=True):
     return {'provider': provider, 'prefer_download': prefer_download}
@@ -66,3 +68,36 @@ class Settings:
     def save(self):
         with open(self.path, 'w') as f:
             json.dump(self.__dict__, f, indent=4, sort_keys=True)
+
+def config_dir():
+    xdg_config_home = os.getenv("XDG_CONFIG_HOME")
+    if xdg_config_home:
+        path = xdg_config_home
+    else:
+        path = os.path.join(os.path.expanduser("~"), ".config")
+    path += '/openplayer'
+    p = Path(path)
+    p.mkdir(parents=True, exist_ok=True)
+    return path
+
+def data_dir():
+    xdg_config_home = os.getenv("XDG_DATA_HOME")
+    if xdg_config_home:
+        path = xdg_config_home
+    else:
+        path = os.path.join(os.path.expanduser("~"), ".local/share")
+    path += '/openplayer'
+    p = Path(path)
+    p.mkdir(parents=True, exist_ok=True)
+    return path
+
+def cache_dir():
+    xdg_config_home = os.getenv("XDG_CACHE_HOME")
+    if xdg_config_home:
+        path = xdg_config_home
+    else:
+        path = os.path.join(os.path.expanduser("~"), ".cache")
+    path += '/openplayer'
+    p = Path(path)
+    p.mkdir(parents=True, exist_ok=True)
+    return path
