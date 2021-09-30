@@ -524,6 +524,8 @@ class PlaylistIntent(ListIntent):
                     self.submenu = PlaylistSubmenu(self.instance)
                     self.instance.refresh = True
                     return False, None
+                elif ret == 'queue':
+                    self.instance.player.playlist_append(self.items[self.index].object)
                 elif type(ret) is dict:
                     ret['songs'].append(self.items[self.index].object)
                     self.instance.playlist.save()
@@ -538,7 +540,7 @@ class PlaylistIntent(ListIntent):
             self.instance.player.play_song(self.items[self.index].object)
             return False, None
         elif char == 109:
-            self.submenu = Submenu(self.instance, {'playlist': 'Add to playlist', 'delete': 'Delete'})
+            self.submenu = Submenu(self.instance, {'playlist': 'Add to playlist',  'queue': 'Add to queue', 'delete': 'Delete'})
             if self.instance.settings.debug_mode:
                 self.submenu.choices['debug'] = 'Edit JSON'
             self.on_submenu = True
