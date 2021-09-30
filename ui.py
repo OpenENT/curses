@@ -376,7 +376,8 @@ class QueueSubmenu(Submenu):
         self.instance = instance
         self.choices = dict()
         self.index = 0
-        index = 0
+        self.choices[0] = "Clear"
+        index = 1
         for song in self.instance.player.current_playlist['songs']:
             self.choices[index] = song['title']
             index += 1
@@ -390,7 +391,10 @@ class QueueSubmenu(Submenu):
             if ret == 'new':
                 return True, None
             else:
-                self.instance.player.playlist_go(index=ret)
+                if ret == 0:
+                    self.instance.player.playlist_clear()
+                    return True, None
+                self.instance.player.playlist_go(index=ret-1)
                 return True, None
         return False, None
 
