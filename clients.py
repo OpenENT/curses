@@ -46,12 +46,13 @@ class PlayerD:
         except:
             return None
 
-    def playlist_append(self, song):
+    def playlist_append(self, song, append=True):
         if self.current_playlist is None:
             self.current_playlist = playlist('Queue')
         try:
             r = requests.get(self.host+"/action", params={'type': 'playlist_append', 'arg': self.check_download(song)}).text
-            self.current_playlist['songs'].append(song)
+            if append:
+                self.current_playlist['songs'].append(song)
             return r
         except Exception as e:
             raise e
@@ -99,7 +100,7 @@ class PlayerD:
         self.playlist_clear()
         self.current_playlist = playlist
         for song in playlist['songs']:
-            self.playlist_append(self.check_download(song))
+            self.playlist_append(self.check_download(song), False)
         self.playlist_go(0)
 
     def get_status(self):
